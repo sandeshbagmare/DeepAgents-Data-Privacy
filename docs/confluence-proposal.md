@@ -70,6 +70,44 @@ For the validated response paths and default policy, raw observed values and row
 
 Counts and aggregates are disabled by default. They can be enabled explicitly for approved use cases. Numeric and grouped aggregates are suppressed for cohorts smaller than five, and observed category labels are replaced with synthetic groups.
 
+### Controlled full-data mode
+
+Some workflows use tools whose complete result is already approved for the agent and model, such as public catalogs, published documentation, or pre-redacted records. The framework supports this as an explicit passthrough policy while keeping every other tool schema-only.
+
+| Mode | Configuration | Disclosure behavior |
+|---|---|---|
+| Schema-only | Default | No raw observed result values cross the tested gateway boundary |
+| Selected passthrough | `passthrough_tools=("approved_tool",)` | Complete successful result from named tools; all other tools remain sanitized |
+| All-tool passthrough | `passthrough_tools=("*",)` | Complete successful result from every wrapped tool |
+
+```python
+client = create_private_mcp_client(
+    connections,
+    passthrough_tools=("get_public_catalog", "get_approved_report"),
+)
+```
+
+For an environment where every tool is approved to disclose its full result:
+
+```python
+client = create_private_mcp_client(
+    connections,
+    passthrough_tools=("*",),
+)
+```
+
+Passthrough forwards the original successful MCP `ToolResult`, including text or binary content, structured content, and metadata. It intentionally removes the raw-result privacy guarantee for those tools. Upstream errors are still replaced with a generic private error. This control is not content-aware authorization and must not be enabled merely to improve answer quality.
+
+### Passthrough governance
+
+1. Classify each tool result and record a business purpose before adding it to the allowlist.
+2. Prefer exact tool names; wildcard mode requires approval for the entire wrapped server catalog.
+3. Enforce authentication, authorization, tenant isolation, and row filtering in the upstream tool.
+4. Review model-provider retention and training settings for the disclosed data class.
+5. Prevent raw result logging in the gateway, agent, tracing, and evaluation systems.
+6. Test that approved tools pass complete results and neighboring tools remain schema-only.
+7. Re-review the allowlist whenever upstream tool ownership, schema, or semantics change.
+
 ## Integration
 
 ```python
@@ -89,6 +127,8 @@ tools = await client.get_tools()
 ```
 
 The wrapper preserves normal `MultiServerMCPClient` connection configuration while routing each connection through a local stdio gateway subprocess.
+
+The `passthrough_tools` option applies to tool names on the wrapped connections. If multiple servers expose the same tool name, use separate `private_mcp_connection()` configurations or rename the tools so approval is unambiguous.
 
 ## Evidence methodology
 
@@ -110,6 +150,19 @@ The same run discovers the gateway process tree and queries Windows `Get-NetTCPC
 | Local runtime TCP entries | 6 | Loopback-only Python runtime entries, retained in raw evidence |
 | Model requests | 0 | Evidence capture is independent of a provider |
 | API key required | No | Reproduction does not use credentials |
+
+### Passthrough validation matrix
+
+| Test | Expected result | Validated behavior |
+|---|---|---|
+| Default policy | Raw fixture values absent | Existing schema-only tests pass |
+| Named allowlist | Approved tool returns complete result | Raw canary present only for approved tool |
+| Neighboring tool | Unlisted tool remains sanitized | Neighboring canaries absent |
+| Wildcard allowlist | Every successful tool may return complete result | Raw successful result preserved |
+| Upstream failure in wildcard mode | Error detail remains private | Generic error returned; error canary absent |
+| Spawned stdio gateway | Policy survives process configuration | Selected demo tool passes; unlisted demo tool sanitized |
+
+The passthrough tests use synthetic canaries. Their purpose is to prove that disclosure is deliberate and narrowly selected, not to claim privacy for passthrough results.
 
 Payload byte size is recorded as operational context but is not treated as a privacy score. Structural envelopes can be larger than small source objects. The meaningful test is whether prohibited observed values cross the boundary.
 
@@ -140,6 +193,8 @@ Payload byte size is recorded as operational context but is not treated as a pri
 - A compromised gateway process can observe upstream values in memory.
 - A domain-specific text sanitizer can be incorrect and requires independent testing.
 - Aggregate opt-ins can create inference risk even with a minimum cohort threshold.
+- Passthrough tools intentionally expose complete successful results to the agent process and potentially the model provider.
+- Tool-name allowlists can become stale if an upstream tool changes ownership, purpose, schema, or sensitivity.
 - HTTP upstream MCP servers will create expected network connections from the gateway process. The zero-external-connection result applies only to this local stdio fixture.
 - Process IDs and runtime ports vary between evidence runs.
 - The canary test proves absence of selected values in tested paths, not absence of every possible semantic inference.
@@ -148,12 +203,13 @@ Payload byte size is recorded as operational context but is not treated as a pri
 
 1. Run the gateway with least privilege and no unnecessary filesystem or network access.
 2. Pin and scan Python dependencies; publish signed internal packages from a controlled registry.
-3. Keep schema-only behavior as the immutable deployment default.
+3. Keep schema-only behavior as the deployment default.
 4. Review field names and tool descriptions against a per-domain allowlist.
-5. Require data-owner approval for counts, aggregates, or custom text sanitizers.
+5. Require data-owner approval for counts, aggregates, custom text sanitizers, and every passthrough tool.
 6. Disable raw MCP payload logging and verify tracing configuration end to end.
 7. Run canary, error, cycle, depth, and malformed-container tests in CI.
 8. Record policy version, gateway version, and upstream connection identity for audit without logging source values.
+9. Fail deployment when a passthrough tool is not present in the approved policy manifest or when wildcard mode lacks server-level approval.
 
 ## Pilot plan
 
@@ -170,6 +226,7 @@ Payload byte size is recorded as operational context but is not treated as a pri
 - Zero prohibited canary values in agent-visible MCP responses across CI runs.
 - 100% of configured MCP connections routed through the gateway.
 - 100% of aggregate/count/text policy exceptions linked to an approval record.
+- 100% of selected and wildcard passthrough policies linked to a current data-owner and security approval.
 - Zero raw source values in application, tracing, and model-provider logs during pilot sampling.
 - Acceptable task completion rate for approved schema-discovery workflows.
 - Gateway latency and failure rate within service-specific objectives defined during the pilot.
@@ -180,6 +237,8 @@ Payload byte size is recorded as operational context but is not treated as a pri
 |---|---|
 | Field names reveal sensitive concepts | Domain allowlist and optional field aliases |
 | Policy relaxation introduces inference risk | Explicit configuration, review, minimum cohorts, synthetic labels |
+| Passthrough exposes unapproved data | Exact allowlist, upstream authorization, policy manifest, CI neighbor tests |
+| Wildcard covers newly added tools | Server-level approval plus catalog-change deployment gate |
 | Gateway compromise exposes transient values | Isolation, least privilege, patching, restricted egress |
 | Unsupported content bypasses sanitizer | Replacement result; unsupported content is not copied |
 | Sensitive errors escape | Generic upstream and sanitizer error handling |
@@ -228,6 +287,8 @@ Open `docs/assets/privacy-evidence.html` to inspect the rendered proof. Compare 
 | Withhold arbitrary prose | Generic transformation cannot reliably preserve meaning without values |
 | Replace upstream errors | Exceptions commonly contain credentials or infrastructure details |
 | Make counts and aggregates opt-in | They can reveal presence, rarity, or small cohorts |
+| Make complete-result passthrough opt-in | Some approved workflows need full data, but disclosure must be explicit and auditable |
+| Keep errors private during passthrough | Exception details can contain unrelated credentials or infrastructure values |
 | Keep evidence model-independent | Boundary validation should not require sending data to a provider |
 
 ## Recommendation

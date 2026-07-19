@@ -43,10 +43,16 @@ class PrivacyPolicy:
         "secret",
     )
     text_sanitizers: Mapping[str, TextSanitizer] = field(default_factory=dict)
+    passthrough_tools: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.minimum_cohort_size < 2:
             raise ValueError("minimum_cohort_size must be at least 2")
+        if any(not tool_name.strip() for tool_name in self.passthrough_tools):
+            raise ValueError("passthrough_tools cannot contain empty tool names")
+
+    def allows_passthrough(self, tool_name: str) -> bool:
+        return "*" in self.passthrough_tools or tool_name in self.passthrough_tools
 
 
 def sanitize_value(
@@ -347,6 +353,8 @@ class PrivacyMiddleware(Middleware):
             result = await call_next(context)
             if result.is_error:
                 return _private_error()
+            if self.policy.allows_passthrough(context.message.name):
+                return result
             value = result.structured_content
             if value is None:
                 texts = [block.text for block in result.content if isinstance(block, mt.TextContent)]

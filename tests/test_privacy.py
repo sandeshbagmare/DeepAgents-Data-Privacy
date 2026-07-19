@@ -303,3 +303,86 @@ def test_private_client_spawns_gateway_before_agent_process() -> None:
         assert '"rows"' not in rendered
 
     asyncio.run(scenario())
+
+
+def test_proxy_passthrough_is_limited_to_explicit_tools() -> None:
+    async def scenario() -> None:
+        upstream = FastMCP("source")
+
+        @upstream.tool
+        def approved() -> dict[str, object]:
+            return {"rows": [{"account_id": "RAW-APPROVED", "balance": 9000.0}]}
+
+        @upstream.tool
+        def private() -> dict[str, object]:
+            return {"rows": [{"account_id": "RAW-PRIVATE", "balance": 8000.0}]}
+
+        proxy = create_private_proxy(
+            upstream,
+            policy=PrivacyPolicy(passthrough_tools=("approved",)),
+        )
+        async with Client(proxy) as client:
+            approved_result = await client.call_tool("approved", {})
+            private_result = await client.call_tool("private", {})
+
+        assert "RAW-APPROVED" in str(approved_result)
+        assert "9000" in str(approved_result)
+        assert "RAW-PRIVATE" not in str(private_result)
+        assert "8000" not in str(private_result)
+
+    asyncio.run(scenario())
+
+
+def test_proxy_wildcard_passthrough_keeps_errors_private() -> None:
+    async def scenario() -> None:
+        upstream = FastMCP("source")
+
+        @upstream.tool
+        def raw() -> dict[str, str]:
+            return {"secret": "RAW-FOR-ALL"}
+
+        @upstream.tool
+        def fail() -> str:
+            raise RuntimeError("RAW-ERROR")
+
+        proxy = create_private_proxy(
+            upstream,
+            policy=PrivacyPolicy(passthrough_tools=("*",)),
+        )
+        async with Client(proxy) as client:
+            raw_result = await client.call_tool("raw", {})
+            error_result = await client.call_tool("fail", {}, raise_on_error=False)
+
+        assert "RAW-FOR-ALL" in str(raw_result)
+        assert "RAW-ERROR" not in str(error_result)
+        assert "details withheld by privacy policy" in str(error_result)
+
+    asyncio.run(scenario())
+
+
+def test_private_client_applies_passthrough_allowlist_in_spawned_gateway() -> None:
+    async def scenario() -> None:
+        connections = {
+            "private": {
+                "transport": "stdio",
+                "command": sys.executable,
+                "args": ["-m", "deepagents_mcp_demo.server"],
+            }
+        }
+        tools = await create_private_mcp_client(
+            connections,
+            passthrough_tools=("get_products",),
+        ).get_tools()
+        product_result = await next(
+            tool for tool in tools if tool.name == "get_products"
+        ).ainvoke({})
+        customer_result = await next(
+            tool for tool in tools if tool.name == "get_customers"
+        ).ainvoke({})
+
+        assert "Products" in str(product_result)
+        assert "raw_rows_shared" in str(product_result)
+        assert "Customers" not in str(customer_result)
+        assert '"raw_data_shared":false' in str(customer_result)
+
+    asyncio.run(scenario())

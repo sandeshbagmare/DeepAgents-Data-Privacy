@@ -20,6 +20,7 @@ def private_mcp_connection(
     expose_counts: bool = False,
     expose_aggregates: bool = False,
     identifier_fields: tuple[str, ...] | None = None,
+    passthrough_tools: tuple[str, ...] = (),
 ) -> dict[str, Any]:
     if minimum_cohort_size < 2:
         raise ValueError("minimum_cohort_size must be at least 2")
@@ -27,6 +28,7 @@ def private_mcp_connection(
         "minimum_cohort_size": minimum_cohort_size,
         "expose_counts": expose_counts,
         "expose_aggregates": expose_aggregates,
+        "passthrough_tools": list(passthrough_tools),
     }
     if identifier_fields is not None:
         policy["identifier_fields"] = list(identifier_fields)
@@ -49,6 +51,7 @@ def create_private_mcp_client(
     expose_counts: bool = False,
     expose_aggregates: bool = False,
     identifier_fields: tuple[str, ...] | None = None,
+    passthrough_tools: tuple[str, ...] = (),
 ) -> Any:
     from langchain_mcp_adapters.client import MultiServerMCPClient
 
@@ -59,6 +62,7 @@ def create_private_mcp_client(
             expose_counts=expose_counts,
             expose_aggregates=expose_aggregates,
             identifier_fields=identifier_fields,
+            passthrough_tools=passthrough_tools,
         )
         for name, connection in connections.items()
     }

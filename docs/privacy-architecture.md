@@ -38,6 +38,33 @@ The middleware fails closed. Upstream errors and sanitizer exceptions become a g
 error, plain text is withheld unless a named policy hook handles it, and non-text MCP
 blocks are not copied into the replacement result.
 
+## Policy modes
+
+| Mode | Configuration | Successful tool result | Error result |
+|---|---|---|---|
+| Schema-only | Default | Replacement structural envelope | Generic private error |
+| Aggregate | `expose_counts=True`, `expose_aggregates=True` | Approved cohort-safe statistics | Generic private error |
+| Selected raw | `passthrough_tools=("tool_name",)` | Original `ToolResult` for named tools | Generic private error |
+| All raw | `passthrough_tools=("*",)` | Original `ToolResult` for every tool | Generic private error |
+
+The passthrough decision is made in middleware after a successful upstream call and
+before structural sanitization. Exact tool names form the allowlist; `*` is the only
+wildcard. Unlisted tools follow the normal privacy policy. The original result includes
+all MCP content blocks, structured content, and metadata, so passthrough is an explicit
+trust-boundary bypass rather than a weaker sanitizer.
+
+For mixed deployments, prefer a short selected-tool allowlist:
+
+```python
+client = create_private_mcp_client(
+  connections,
+  passthrough_tools=("get_public_catalog",),
+)
+```
+
+Use `passthrough_tools=("*",)` only when every tool on every wrapped connection is
+approved for agent and model disclosure. Errors remain fail-closed in both cases.
+
 ## Default data handling
 
 - Record collections become column names, inferred types, and one synthetic row.
@@ -49,6 +76,7 @@ blocks are not copied into the replacement result.
 - Identifier-like fields are marked withheld.
 - Data-like mapping keys are replaced with synthetic field names.
 - Counts and aggregates require explicit opt-in.
+- Raw successful results require an exact tool-name or wildcard passthrough opt-in.
 
 Normalization intentionally recognizes explicit structural protocols: mappings,
 sequences, sets, dataclasses, Pydantic `model_dump()`, and named tuple `_asdict()`.
@@ -59,7 +87,7 @@ envelope.
 
 ## Transport evidence
 
-![Sanitized MCP evidence showing stdio transport and zero server TCP sockets](assets/privacy-evidence.png)
+![Sanitized MCP evidence showing stdio transport, blocked canaries, and zero external TCP connections](assets/privacy-evidence.png)
 
 Run the evidence capture directly:
 
@@ -67,15 +95,16 @@ Run the evidence capture directly:
 .venv\Scripts\python.exe scripts\capture-privacy-evidence.py
 ```
 
-The script opens a real MCP JSON-RPC session over the child process's stdin/stdout,
-calls `get_products`, and inspects the MCP server PID with `Get-NetTCPConnection` on
-Windows. It verifies the observed transport topology; the recursive payload assertions
-in `smoke.py` separately enforce that the serialized response has no `rows` key and
-contains the explicit privacy metadata.
+The script opens a real MCP JSON-RPC session through the gateway's stdin/stdout and
+launches a deliberately sensitive upstream fixture as a descendant process. It calls
+five response classes, checks 14 selected canary values, and inspects the complete
+observed process tree with `Get-NetTCPConnection` on Windows.
 
-The zero-socket observation is scoped to the MCP server process during that call. It
-does not claim that the Deep Agent makes no network request: the agent uses HTTPS to
-call the selected language-model provider after receiving the safe tool response.
+The captured run records six local Python runtime loopback entries and zero external
+connections. The zero-external observation is scoped to the local stdio fixture and
+does not claim that a Deep Agent makes no model request. HTTP MCP upstreams and model
+providers create expected network traffic in their respective processes. The evidence
+harness itself makes no model request and requires no API key.
 
 ## What the LLM receives
 

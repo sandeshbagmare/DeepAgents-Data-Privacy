@@ -94,6 +94,34 @@ Category values are replaced by synthetic group labels. Numeric and grouped resu
 are suppressed below the cohort threshold. Aggregate mode still reveals information
 derived from real data and is not equivalent to the schema-only default.
 
+### Trusted raw passthrough
+
+The gateway can forward the complete successful MCP result for explicitly trusted
+tools. Every unlisted tool remains schema-only:
+
+```python
+client = create_private_mcp_client(
+  connections,
+  passthrough_tools=("get_public_catalog", "get_documentation"),
+)
+```
+
+To forward successful results from every tool, use the wildcard explicitly:
+
+```python
+client = create_private_mcp_client(
+  connections,
+  passthrough_tools=("*",),
+)
+```
+
+Passthrough returns the upstream `ToolResult` without sanitizing its content,
+structured content, or metadata. It therefore allows raw values to enter the agent
+process and potentially the model request. Upstream errors remain generic and do not
+pass through. Treat the allowlist as a privileged disclosure policy: use stable tool
+names, read-only sources, least privilege, data-owner approval, and tests that prove
+neighboring tools remain private. An empty allowlist is the default.
+
 For custom plain-text handling, use an in-process `PrivacyPolicy.text_sanitizers`
 callback that returns a structured intermediate object. The normal sanitizer runs
 again on that object, so callback output values are still replaced before disclosure.
@@ -114,7 +142,7 @@ filters while enforcing a minimum numeric cohort size of five.
 > stricter schema-only policy. In both modes, tool metadata and synthetic structure
 > reach the LLM; user questions also reach the selected model provider.
 
-![Privacy evidence showing stdio transport, zero MCP server TCP sockets, and an aggregate-only response](docs/assets/privacy-evidence.png)
+![Privacy evidence showing stdio transport, blocked canaries, and zero external TCP connections](docs/assets/privacy-evidence.png)
 
 The screenshot is generated from a real MCP tool call. Reproduce the underlying check
 with `python scripts/capture-privacy-evidence.py`; it requires no API key.
@@ -344,6 +372,10 @@ mode can support inference through repeated or overlapping queries. Production s
 should add authentication, authorization, schema allowlists, query auditing, rate
 limits, contribution bounds, privacy budgets or differential privacy, provider
 retention controls, and an independent security review.
+
+Raw passthrough intentionally removes the result privacy guarantee for selected tools.
+Tool authorization and data classification must be enforced upstream; the gateway does
+not inspect or partially redact an approved passthrough result.
 
 See [docs/privacy-architecture.md](docs/privacy-architecture.md) for the detailed threat
 model and implementation rationale. VS Code can launch the local server using
