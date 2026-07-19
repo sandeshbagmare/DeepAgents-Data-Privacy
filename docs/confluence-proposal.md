@@ -110,6 +110,10 @@ Passthrough forwards the original successful MCP `ToolResult`, including text or
 
 ## Integration
 
+For the exact runtime sequence, FastMCP middleware hook, standalone implementation
+without this package, and dual-perspective verification pattern, see
+[Implementation Guide: Full-Data MCP Tools with LLM-Safe Results](confluence-implementation-guide.md).
+
 ```python
 from deepagents_mcp_privacy import create_private_mcp_client
 

@@ -56,6 +56,9 @@ flowchart LR
 
 For in-process FastMCP composition, use `create_private_proxy(upstream, policy=...)`.
 Use `sanitize_value(value)` when integrating the policy engine into another boundary.
+The [Confluence implementation guide](docs/confluence-implementation-guide.md) explains
+the exact FastMCP middleware, process boundary, equivalent standalone implementation,
+and tests for proving that tools use complete data while the LLM sees only safe output.
 
 ## Disclosure policy
 

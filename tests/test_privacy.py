@@ -259,6 +259,52 @@ def test_proxy_preserves_tool_schema_and_replaces_results() -> None:
     asyncio.run(scenario())
 
 
+def test_tool_processes_whole_dataset_while_llm_sees_only_synthetic_sample() -> None:
+    async def scenario() -> None:
+        upstream = FastMCP("source")
+        source_rows = [
+            {"customer_id": "PRIVATE-001", "region": "North", "amount": 125.5},
+            {"customer_id": "PRIVATE-002", "region": "South", "amount": 87.0},
+            {"customer_id": "PRIVATE-003", "region": "West", "amount": 240.0},
+        ]
+        tool_observation: dict[str, object] = {}
+
+        @upstream.tool
+        def analyze_customers() -> dict[str, object]:
+            tool_observation["row_count"] = len(source_rows)
+            tool_observation["customer_ids"] = [row["customer_id"] for row in source_rows]
+            tool_observation["total"] = sum(float(row["amount"]) for row in source_rows)
+            return {"rows": source_rows}
+
+        proxy = create_private_proxy(upstream)
+        async with Client(proxy) as client:
+            llm_result = await client.call_tool("analyze_customers", {})
+
+        llm_payload = llm_result.structured_content
+        rendered = _render(llm_payload)
+
+        assert tool_observation == {
+            "row_count": 3,
+            "customer_ids": ["PRIVATE-001", "PRIVATE-002", "PRIVATE-003"],
+            "total": 452.5,
+        }
+        assert llm_payload["privacy"]["raw_data_shared"] is False
+        assert llm_payload["schema"]["columns"] == ["amount", "customer_id", "region"]
+        assert llm_payload["example_row"] == {
+            "amount": 0,
+            "customer_id": "SYNTHETIC",
+            "region": "EXAMPLE_REGION",
+        }
+        assert llm_payload["result"] == {
+            "withheld": True,
+            "reason": "Schema-only policy is active",
+        }
+        for observed_value in ("PRIVATE-001", "PRIVATE-002", "PRIVATE-003", "125.5", "87.0", "240.0"):
+            assert observed_value not in rendered
+
+    asyncio.run(scenario())
+
+
 def test_proxy_replaces_upstream_error_details() -> None:
     async def scenario() -> None:
         upstream = FastMCP("source")
