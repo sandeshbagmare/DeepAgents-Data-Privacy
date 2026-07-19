@@ -26,8 +26,15 @@ This launches the server over stdio, verifies that it advertises 34 tools, calls
 
 ## Run the Deep Agent
 
-Copy `.env.example` to `.env`, choose a LangChain model identifier, and provide the
-matching provider API key. Then run:
+For the configured OpenAI-compatible provider, run the interactive setup helper:
+
+```powershell
+.\scripts\configure-provider.ps1
+```
+
+It securely prompts in the terminal, requests available model IDs from the provider,
+lets you select one, and writes the connection to the ignored `.env` file. Never paste
+an API key into source, documentation, a command argument, or chat. Then run:
 
 ```powershell
 table-deep-agent "Compare average product price by category and summarize inventory."

@@ -6,6 +6,7 @@ import os
 
 from deepagents import create_deep_agent
 from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
 
 from deepagents_mcp_demo.mcp_client import create_mcp_client
 
@@ -16,9 +17,17 @@ async def run_agent(question: str) -> None:
     if not model:
         raise SystemExit("Set MODEL in .env, for example openai:gpt-4.1-mini")
 
+    model_name = model.removeprefix("openai:")
+    chat_model = ChatOpenAI(
+        model=model_name,
+        base_url=os.getenv("OPENAI_BASE_URL"),
+        api_key=os.getenv("OPENAI_API_KEY"),
+        use_responses_api=False,
+    )
+
     tools = await create_mcp_client().get_tools()
     agent = create_deep_agent(
-        model=model,
+        model=chat_model,
         tools=tools,
         system_prompt=(
             "You are a privacy-preserving data analyst. MCP tools compute over raw data "
