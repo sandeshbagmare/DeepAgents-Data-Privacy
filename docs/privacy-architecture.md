@@ -1,5 +1,8 @@
 # Privacy Gateway Architecture
 
+The Confluence-ready adoption proposal and current reproducible evidence package are
+documented in [confluence-proposal.md](confluence-proposal.md).
+
 ## Goal
 
 The reusable gateway prevents raw MCP tool results from entering the Deep Agent

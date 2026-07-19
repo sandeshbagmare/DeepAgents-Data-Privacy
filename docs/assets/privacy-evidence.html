@@ -3,51 +3,41 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MCP privacy evidence</title>
+  <title>MCP privacy gateway evidence</title>
   <style>
-    :root { color-scheme: dark; --ink: #f4f1e8; --muted: #a6b2ad; --green: #5ee6a8; --line: #35443e; }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #101815; color: var(--ink); font-family: Consolas, "Courier New", monospace; }
-    main { width: min(1080px, calc(100vw - 48px)); border: 1px solid var(--line); background: #17221e; box-shadow: 0 24px 60px #0008; }
-    header { display: flex; justify-content: space-between; gap: 24px; padding: 18px 24px; border-bottom: 1px solid var(--line); background: #1d2b26; }
-    h1 { margin: 0; font-family: Georgia, serif; font-size: 24px; font-weight: 600; letter-spacing: 0; }
-    .status { color: var(--green); font-weight: 700; }
-    .body { display: grid; grid-template-columns: 260px 1fr; }
-    aside { padding: 24px; border-right: 1px solid var(--line); }
-    aside p { margin: 0 0 22px; color: var(--muted); font-size: 13px; line-height: 1.5; }
-    aside strong { display: block; margin-top: 4px; color: var(--ink); font-size: 18px; }
-    pre { margin: 0; padding: 24px 28px; overflow: hidden; color: #d8e5df; font-size: 14px; line-height: 1.48; }
-    .key { color: #8ed8ff; } .false { color: var(--green); } .number { color: #ffd479; }
-    footer { padding: 14px 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
-    @media (max-width: 760px) { .body { grid-template-columns: 1fr; } aside { border-right: 0; border-bottom: 1px solid var(--line); } }
+    :root { color-scheme: dark; --ink:#f5f7f4; --muted:#a9b5af; --green:#62e6a7; --cyan:#77d7f5; --line:#33423c; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:#0f1714; color:var(--ink); font-family:Consolas,"Courier New",monospace; }
+    main { width:min(1180px,calc(100vw - 40px)); margin:24px auto; border:1px solid var(--line); background:#17211d; box-shadow:0 24px 60px #0008; }
+    header { display:flex; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--line); }
+    h1 { margin:0; font-family:Georgia,serif; font-size:25px; letter-spacing:0; }
+    .pass { color:var(--green); font-weight:700; }
+    .stats { display:grid; grid-template-columns:repeat(5,1fr); border-bottom:1px solid var(--line); }
+    .stat { padding:18px; border-right:1px solid var(--line); color:var(--muted); font-size:12px; }
+    .stat:last-child { border-right:0; } .stat strong { display:block; margin-top:7px; color:var(--ink); font-size:22px; }
+    .body { display:grid; grid-template-columns:330px 1fr; }
+    aside { padding:24px; border-right:1px solid var(--line); }
+    aside h2 { margin:0 0 18px; font-family:Georgia,serif; font-size:18px; }
+    aside p { color:var(--muted); font-size:13px; line-height:1.55; }
+    code { color:var(--cyan); } .proof { padding:20px; overflow:hidden; } table { width:100%; border-collapse:collapse; font-size:12px; } th,td { padding:12px 8px; border-bottom:1px solid var(--line); text-align:left; } th { color:var(--muted); font-weight:400; }
+    footer { padding:14px 24px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+    @media(max-width:820px) { .stats{grid-template-columns:1fr 1fr} .body{grid-template-columns:1fr} aside{border-right:0;border-bottom:1px solid var(--line)} }
   </style>
 </head>
-<body>
-  <main>
-    <header><h1>Private MCP transport evidence</h1><span class="status">PASS</span></header>
-    <div class="body">
-      <aside>
-        <p>Transport<strong>stdio</strong></p>
-        <p>MCP server TCP sockets<strong>0</strong></p>
-        <p>Raw rows shared<strong>No</strong></p>
-        <p>Example source<strong>Synthetic</strong></p>
-      </aside>
-      <pre>{
-  <span class="key">"tool"</span>: "get_products",
-  <span class="key">"operation"</span>: "group_average",
-  <span class="key">"response_top_level_keys"</span>: [
-    "title", "privacy", "schema",
-    "example_row", "query", "result"
-  ],
-  <span class="key">"raw_rows_shared"</span>: <span class="false">false</span>,
-  <span class="key">"result"</span>: [
-    {"category": "Hardware", "average": <span class="number">2346.87</span>},
-    {"category": "Service", "average": <span class="number">2448.82</span>},
-    {"category": "Software", "average": <span class="number">2584.67</span>}
-  ]
-}</pre>
-    </div>
-    <footer>Captured from seed 7 with scripts/capture-privacy-evidence.py. No API key or model request is used.</footer>
-  </main>
-</body>
-</html>
+<body><main>
+  <header><h1>Deep Agents MCP privacy gateway proof</h1><span class="pass">ALL CHECKS PASS</span></header>
+  <section class="stats">
+    <div class="stat">Tools exercised<strong>5</strong></div>
+    <div class="stat">Known secrets blocked<strong>14</strong></div>
+    <div class="stat">Observed leaks<strong>0</strong></div>
+    <div class="stat">External TCP<strong>0</strong></div>
+    <div class="stat">Response classes<strong>5</strong></div>
+  </section>
+  <div class="body"><aside>
+    <h2>Process boundary</h2>
+    <p>Client communicates with gateway over <code>stdio</code>. Gateway launches the deliberately sensitive upstream fixture as a child process.</p>
+    <p>Gateway PID <strong>20092</strong><br>Observed child PIDs <strong>11980, 17136, 24800, 20628</strong></p>
+    <p>Windows <code>Get-NetTCPConnection</code> found 6 local runtime entries and <strong>0 external connections</strong>. MCP messages were exchanged through stdin/stdout.</p>
+    </aside><section class="proof"><table><thead><tr><th>Tool</th><th>Class</th><th>Safe bytes</th><th>Leaks</th></tr></thead><tbody><tr><td>customer_rows</td><td>table</td><td>537 B</td><td class="pass">0</td></tr><tr><td>infrastructure_status</td><td>structured</td><td>471 B</td><td class="pass">0</td></tr><tr><td>nested_metrics</td><td>structured</td><td>394 B</td><td class="pass">0</td></tr><tr><td>private_note</td><td>structured</td><td>212 B</td><td class="pass">0</td></tr><tr><td>private_failure</td><td>error</td><td>73 B</td><td class="pass">0</td></tr></tbody></table></section></div>
+  <footer>Generated by scripts/capture-privacy-evidence.py without an API key or model request.</footer>
+</main></body></html>

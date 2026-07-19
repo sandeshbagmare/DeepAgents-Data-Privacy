@@ -348,3 +348,7 @@ retention controls, and an independent security review.
 See [docs/privacy-architecture.md](docs/privacy-architecture.md) for the detailed threat
 model and implementation rationale. VS Code can launch the local server using
 [.vscode/mcp.json](.vscode/mcp.json).
+
+For an enterprise adoption proposal, reproducible gateway statistics, process/network
+logs, and screenshot evidence, see
+[docs/confluence-proposal.md](docs/confluence-proposal.md).

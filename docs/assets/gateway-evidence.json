@@ -1,0 +1,150 @@
+{
+  "capture": {
+    "transport": "stdio",
+    "model_request_made": false,
+    "api_key_required": false,
+    "platform": "win32"
+  },
+  "processes": {
+    "gateway_pid": 20092,
+    "descendant_pids": [
+      11980,
+      17136,
+      24800,
+      20628
+    ],
+    "checked_process_ids": [
+      20092,
+      11980,
+      17136,
+      24800,
+      20628
+    ]
+  },
+  "network": {
+    "command": "Get-NetTCPConnection filtered by gateway and descendant process IDs",
+    "connections": [
+      {
+        "OwningProcess": 20628,
+        "State": 100,
+        "LocalAddress": "0.0.0.0",
+        "LocalPort": 55072,
+        "RemoteAddress": "0.0.0.0",
+        "RemotePort": 0
+      },
+      {
+        "OwningProcess": 11980,
+        "State": 100,
+        "LocalAddress": "0.0.0.0",
+        "LocalPort": 55068,
+        "RemoteAddress": "0.0.0.0",
+        "RemotePort": 0
+      },
+      {
+        "OwningProcess": 20628,
+        "State": 5,
+        "LocalAddress": "127.0.0.1",
+        "LocalPort": 55072,
+        "RemoteAddress": "127.0.0.1",
+        "RemotePort": 55071
+      },
+      {
+        "OwningProcess": 20628,
+        "State": 5,
+        "LocalAddress": "127.0.0.1",
+        "LocalPort": 55071,
+        "RemoteAddress": "127.0.0.1",
+        "RemotePort": 55072
+      },
+      {
+        "OwningProcess": 11980,
+        "State": 5,
+        "LocalAddress": "127.0.0.1",
+        "LocalPort": 55068,
+        "RemoteAddress": "127.0.0.1",
+        "RemotePort": 55067
+      },
+      {
+        "OwningProcess": 11980,
+        "State": 5,
+        "LocalAddress": "127.0.0.1",
+        "LocalPort": 55067,
+        "RemoteAddress": "127.0.0.1",
+        "RemotePort": 55068
+      }
+    ]
+  },
+  "summary": {
+    "tools_exercised": 5,
+    "response_classes": 5,
+    "known_secrets_tested": 14,
+    "known_secrets_blocked": 14,
+    "observed_leaks": 0,
+    "owned_tcp_connections": 6,
+    "loopback_tcp_connections": 6,
+    "external_tcp_connections": 0,
+    "raw_fixture_bytes": 1743,
+    "safe_response_bytes": 1614,
+    "aggregate_byte_reduction_percent": 7.4
+  },
+  "tool_proofs": {
+    "customer_rows": {
+      "source_kind": "table",
+      "safe_top_level_keys": [
+        "example_row",
+        "privacy",
+        "result",
+        "schema",
+        "source_kind"
+      ],
+      "known_secret_matches": [],
+      "response_bytes": 537,
+      "raw_fixture_bytes": 1352,
+      "byte_reduction_percent": 60.3
+    },
+    "infrastructure_status": {
+      "source_kind": "structured",
+      "safe_top_level_keys": [
+        "privacy",
+        "shape",
+        "source_kind"
+      ],
+      "known_secret_matches": [],
+      "response_bytes": 471,
+      "raw_fixture_bytes": 207,
+      "byte_reduction_percent": -127.5
+    },
+    "nested_metrics": {
+      "source_kind": "structured",
+      "safe_top_level_keys": [
+        "privacy",
+        "shape",
+        "source_kind"
+      ],
+      "known_secret_matches": [],
+      "response_bytes": 394,
+      "raw_fixture_bytes": 127,
+      "byte_reduction_percent": -210.2
+    },
+    "private_note": {
+      "source_kind": "structured",
+      "safe_top_level_keys": [
+        "privacy",
+        "shape",
+        "source_kind"
+      ],
+      "known_secret_matches": [],
+      "response_bytes": 212,
+      "raw_fixture_bytes": 57,
+      "byte_reduction_percent": -271.9
+    },
+    "private_failure": {
+      "source_kind": "error",
+      "safe_top_level_keys": [
+        "error"
+      ],
+      "known_secret_matches": [],
+      "response_bytes": 73
+    }
+  }
+}
