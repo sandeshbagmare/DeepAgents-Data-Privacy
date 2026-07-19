@@ -329,3 +329,64 @@ successful results into the agent process and potentially the model-provider req
 The defensible claim is: under schema-only policy, tested observed values do not cross
 the gateway-to-agent MCP result boundary, while the upstream tool retains access to all
 data required for its authorized computation.
+
+## Production architecture and resource gate
+
+Deep Agents can be production-deployed, but its production positioning must not be
+confused with automatic workload suitability. The harness combines an agent loop with
+planning, filesystems, context offloading, subagents, memory, middleware, and optional
+human approval. Each enabled capability increases the state, concurrency, latency,
+resource, reliability, and security surface that the application team must own.
+
+Choose the smallest orchestration model that meets the requirement:
+
+| Workload | Preferred starting point |
+|---|---|
+| Bounded assistant with a small tool set | LangChain `create_agent` |
+| Open-ended, multi-step work needing planning and context management | Deep Agents |
+| Deterministic transitions, fixed approvals, or regulated execution | Explicit LangGraph workflow |
+
+No universal CPU or RAM number is defensible. Capacity tests must use representative
+short, median, worst-case, and adversarial tasks at expected and burst concurrency.
+Capture both warm and cold runs and record:
+
+1. Peak working set, CPU time, process count, and open handles by PID.
+2. Input, output, and cached tokens plus context utilization and cost.
+3. Serialized agent state, checkpoint, memory, file, and trace sizes.
+4. Model, tool, queue, and end-to-end p50/p95/p99 latency.
+5. Subagent depth and fan-out, parallel tool count, retries, and cancellations.
+6. Downstream saturation, timeout behavior, recovery, and duplicate side effects.
+
+Release limits should cover wall-clock time, tokens, model calls, tool calls, subagent
+depth and fan-out, concurrency, payload bytes, memory, retries, and spend. Exhausting a
+limit must cancel or fail safely rather than silently continue. Context summarization,
+offloading, isolated subagents, progressive skill loading, and prompt caching can
+reduce pressure, but they do not replace capacity testing.
+
+## Privacy lifecycle outside the gateway
+
+The result middleware is one control in a larger operating model. Production owners
+must separately implement and verify:
+
+| Control plane | Required control |
+|---|---|
+| Identity and source access | Authenticate every actor and authorize each row, operation, and tool invocation upstream. |
+| MCP credentials | Validate token audience, prohibit token passthrough, use separate downstream credentials, and protect sessions. |
+| Tenant isolation | Namespace checkpoints, stores, memory, files, vectors, caches, traces, and backups per tenant. |
+| Execution safety | Allowlist tools, validate arguments and outputs, sandbox code/shell/filesystem access, restrict egress, and approve high-impact actions. |
+| Data governance | Establish purpose, legal basis, classification, consent, minimization, residency, retention, deletion, and subject-rights workflows. |
+| Providers and telemetry | Define encryption, regions, retention, training use, subprocessors, deletion, incident terms, and payload-free observability. |
+| Assurance | Maintain policy owners, immutable audit events without source payloads, offline regressions, sampled online evaluations, red-team tests, and incident exercises. |
+
+Prompt injection cannot be solved by system prompts alone. Treat tool, file, web, and
+retrieved content as untrusted; segregate it from instructions; validate model outputs
+deterministically; minimize tool authority; and require human approval for irreversible
+or high-impact actions. Declarative subagents must receive the same restrictions
+explicitly, and mutable middleware instance state must not be shared across concurrent
+invocations.
+
+The report at
+[docs/assets/privacy-evidence.html](assets/privacy-evidence.html#production) contains
+the production release checklist and links to the official Deep Agents documentation,
+MCP security and authorization specifications, OWASP GenAI Top 10, and LangSmith
+observability, evaluation, and deployment guidance used for this assessment.

@@ -52,6 +52,28 @@
         .section-head { display:flex; justify-content:space-between; gap:40px; align-items:end; margin-bottom:34px; }
         h2 { margin:0; font:500 34px Georgia,"Times New Roman",serif; letter-spacing:0; }
         .section-head p { max-width:560px; margin:0; color:var(--muted); line-height:1.6; }
+        .callout { margin-bottom:24px; padding:22px 24px; border:1px solid var(--amber); background:#19170f; color:#e8dcc0; line-height:1.65; }
+        .callout strong { color:var(--amber); }
+        .card-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+        .info-card { min-height:230px; padding:24px; border:1px solid var(--line); background:var(--surface); }
+        .info-card .label,.control-table caption { color:var(--cyan); font:11px Consolas,"Courier New",monospace; text-transform:uppercase; }
+        .info-card h3 { margin:14px 0 12px; font:500 21px Georgia,"Times New Roman",serif; }
+        .info-card p { margin:0; color:var(--muted); font-size:13px; line-height:1.65; }
+        .info-card ul { margin:16px 0 0; padding-left:18px; color:var(--muted); font-size:13px; line-height:1.65; }
+        .control-table { border:1px solid var(--line); background:var(--surface); overflow-x:auto; }
+        .control-table table { min-width:860px; }
+        .control-table td { color:var(--muted); line-height:1.55; vertical-align:top; }
+        .control-table td:first-child { color:var(--paper); font-weight:700; }
+        .evidence-tag,.guidance-tag,.required-tag { display:inline-block; margin-bottom:8px; padding:4px 7px; border:1px solid var(--line); border-radius:4px; font:700 10px Consolas,"Courier New",monospace; text-transform:uppercase; }
+        .evidence-tag { color:var(--mint); border-color:#356b50; } .guidance-tag { color:var(--cyan); border-color:#346775; } .required-tag { color:var(--amber); border-color:#796636; }
+        .checklist { display:grid; grid-template-columns:repeat(2,1fr); border:1px solid var(--line); background:var(--surface); }
+        .check { position:relative; min-height:128px; padding:24px 24px 24px 58px; border-bottom:1px solid var(--line); }
+        .check:nth-child(odd) { border-right:1px solid var(--line); }
+        .check::before { content:""; position:absolute; left:24px; top:27px; width:16px; height:16px; border:1px solid var(--amber); }
+        .check h3 { margin:0 0 8px; font-size:15px; } .check p { margin:0; color:var(--muted); font-size:13px; line-height:1.55; }
+        .sources { display:grid; gap:1px; border:1px solid var(--line); background:var(--line); }
+        .source { display:grid; grid-template-columns:190px 1fr auto; gap:24px; align-items:center; padding:20px 22px; background:var(--surface); text-decoration:none; }
+        .source:hover { background:var(--surface-2); } .source strong { font-size:14px; } .source p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; } .source span { color:var(--cyan); font:11px Consolas,"Courier New",monospace; }
         .boundary { display:grid; grid-template-columns:1fr 120px 1fr; align-items:stretch; }
         .boundary-card { border:1px solid var(--line); padding:28px; background:var(--surface); }
         .boundary-card .label { color:var(--muted); font:11px Consolas,"Courier New",monospace; text-transform:uppercase; }
@@ -89,13 +111,14 @@
         @media(max-width:920px) {
             .hero { grid-template-columns:1fr; min-height:auto; } .stats { grid-template-columns:repeat(2,1fr); } .stat { border-bottom:1px solid var(--line); }
             .boundary { grid-template-columns:1fr; } .gate { min-height:80px; border-left:1px solid var(--line); border-right:1px solid var(--line); }
-            .proof-grid { grid-template-columns:1fr; } .process { border-right:0; border-bottom:1px solid var(--line); } .artifacts { grid-template-columns:1fr 1fr; }
+            .proof-grid { grid-template-columns:1fr; } .process { border-right:0; border-bottom:1px solid var(--line); } .artifacts { grid-template-columns:1fr 1fr; } .card-grid { grid-template-columns:1fr 1fr; }
+            .source { grid-template-columns:150px 1fr; } .source span { grid-column:2; }
         }
         @media(max-width:620px) {
             .shell { width:min(100% - 24px,1240px); } nav { height:auto; min-height:68px; align-items:flex-start; padding:16px 0; gap:14px; } .brand span:last-child { display:none; }
             .nav-actions { flex-wrap:wrap; justify-content:flex-end; } .nav-actions .button:not(.primary) { display:none; } h1 { font-size:42px; } .hero { padding:46px 0 58px; gap:40px; }
             .stats { grid-template-columns:1fr 1fr; } .stat { min-height:105px; padding:16px; } .stat strong { font-size:28px; } section.content { padding:64px 0; }
-            .section-head { display:block; } .section-head p { margin-top:14px; } .artifacts,.runbook { grid-template-columns:1fr; } footer { display:block; }
+            .section-head { display:block; } .section-head p { margin-top:14px; } .artifacts,.runbook,.card-grid,.checklist { grid-template-columns:1fr; } .check:nth-child(odd) { border-right:0; } .source { grid-template-columns:1fr; gap:8px; } .source span { grid-column:auto; } footer { display:block; }
         }
         @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .toast { transition:none; } }
   </style>
@@ -105,6 +128,7 @@
         <nav aria-label="Evidence navigation">
             <div class="brand"><span class="mark">DP</span><span>DEEP AGENTS / PRIVACY GATEWAY</span></div>
             <div class="nav-actions">
+                <a class="button" href="#production">Production guide</a>
                 <a class="button" href="../confluence-implementation-guide.md">Confluence guide</a>
                 <a class="button primary" href="../../../RUN_DEMO.cmd">Run demo</a>
             </div>
@@ -170,12 +194,94 @@
                 <aside class="process">
                     <h3>Observed process tree</h3>
                     <p>The client communicates with the gateway over <code>stdio</code>. The gateway launches the sensitive upstream fixture as a descendant process.</p>
-                    <span class="pid">gateway: 25260<br>children: 20308, 35888, 21444, 13184</span>
+                    <span class="pid">gateway: 6024<br>children: 30056, 15708, 30712, 17040</span>
                     <p><code>Get-NetTCPConnection</code> found 6 local runtime entries and <strong>0 external connections</strong>. No model request or API key was used.</p>
                 </aside>
                 <div class="proof">
                     <table><thead><tr><th>Tool</th><th>Safe class</th><th>Response</th><th>Leaks</th></tr></thead><tbody><tr><td><strong>customer_rows</strong></td><td><span class="type">table</span></td><td>537 B</td><td><span class="zero">0</span></td></tr><tr><td><strong>infrastructure_status</strong></td><td><span class="type">structured</span></td><td>471 B</td><td><span class="zero">0</span></td></tr><tr><td><strong>nested_metrics</strong></td><td><span class="type">structured</span></td><td>394 B</td><td><span class="zero">0</span></td></tr><tr><td><strong>private_note</strong></td><td><span class="type">structured</span></td><td>212 B</td><td><span class="zero">0</span></td></tr><tr><td><strong>private_failure</strong></td><td><span class="type">error</span></td><td>73 B</td><td><span class="zero">0</span></td></tr></tbody></table>
                 </div>
+            </div>
+        </section>
+
+        <section class="content" id="production">
+            <div class="section-head">
+                <h2>Production fit, without the mythology</h2>
+                <p>Official Deep Agents documentation describes the harness as production-ready. That is not a promise that every workload should use it, or that production controls arrive automatically.</p>
+            </div>
+            <div class="callout"><strong>Bottom line:</strong> Deep Agents can run in production, but it is an opinionated autonomy harness with planning, filesystems, subagents, memory, summarization, and middleware. Those features increase capability and also expand cost, latency, concurrency, state, and trust boundaries. Use the lighter LangChain <code>create_agent</code> or a custom LangGraph workflow when the full harness does not earn its overhead.</div>
+            <div class="card-grid">
+                <article class="info-card"><span class="guidance-tag">Official guidance</span><h3>Good fit</h3><p>Long-running, multi-step work that benefits from planning, context offloading, isolated subagents, durable state, human approval, and rich tool use.</p></article>
+                <article class="info-card"><span class="guidance-tag">Official alternative</span><h3>Prefer a lighter agent</h3><p>Simple assistants and bounded tool loops often need <code>create_agent</code>, fewer middleware layers, fewer processes, and a smaller operational surface.</p></article>
+                <article class="info-card"><span class="required-tag">Architecture decision</span><h3>Prefer a graph</h3><p>Deterministic sequencing, strict transitions, predictable latency, regulated approvals, or fixed retry semantics are often clearer as an explicit LangGraph workflow.</p></article>
+                <article class="info-card"><span class="required-tag">Production risk</span><h3>Autonomy amplifies work</h3><p>Subagent fan-out and parallel tools can multiply model calls, tool calls, process count, serialized state, failure modes, and spend from one user request.</p></article>
+                <article class="info-card"><span class="required-tag">Security boundary</span><h3>Tools define authority</h3><p>Deep Agents follows a &quot;trust the LLM&quot; model. The agent can do what its tools allow, so authorization, sandboxing, and least privilege belong outside the prompt.</p></article>
+                <article class="info-card"><span class="evidence-tag">Measured here</span><h3>Narrow local proof</h3><p>This repository demonstrates selected stdio result paths, canary blocking, and local socket observations. It is not a universal production certification.</p></article>
+            </div>
+        </section>
+
+        <section class="content" id="resources">
+            <div class="section-head">
+                <h2>CPU, RAM, latency, and cost</h2>
+                <p>No authoritative fixed CPU or RAM requirement exists for Deep Agents. Resource use is a property of the model, tools, backends, data, concurrency, and deployment configuration, so publish workload measurements instead of borrowed numbers.</p>
+            </div>
+            <div class="control-table">
+                <table><thead><tr><th>Pressure source</th><th>Why it grows</th><th>Measure per run and under load</th><th>Control</th></tr></thead><tbody>
+                    <tr><td>Agent and graph state</td><td>Messages, checkpoints, todo state, tool metadata, and durable execution accumulate.</td><td>Serialized state bytes, checkpoint bytes, message count, resume time.</td><td>Retention limits, state compaction, TTLs, bounded histories, tenant quotas.</td></tr>
+                    <tr><td>Context and tokens</td><td>Tool results, memory files, skills, summaries, and prompts consume context and model spend.</td><td>Input/output tokens, cached tokens, context utilization, cost, summary frequency.</td><td>Result minimization, offloading, progressive skill loading, supported prompt caching, hard token budgets.</td></tr>
+                    <tr><td>Subagents and tools</td><td>Parallel work multiplies active calls, temporary state, subprocesses, and downstream load.</td><td>Fan-out, active tasks, calls per run, queue time, process count, open handles.</td><td>Concurrency caps, depth limits, call budgets, timeouts, cancellation, backpressure.</td></tr>
+                    <tr><td>Python and MCP processes</td><td>Gateway, upstream servers, interpreters, sandboxes, and clients each retain runtime memory.</td><td>Peak RSS/working set by PID, CPU time, handles, child processes, startup time.</td><td>Worker sizing, process reuse, memory limits, sandbox quotas, health recycling.</td></tr>
+                    <tr><td>Tool payloads</td><td>Large structured results cost memory during upstream creation, serialization, middleware replacement, and tracing.</td><td>Inbound/outbound bytes, serialization time, peak delta RSS, trace payload size.</td><td>Server-side aggregation, pagination, byte limits, streaming where safe, payload-free tracing.</td></tr>
+                    <tr><td>Model and infrastructure</td><td>Local inference is compute-heavy; hosted inference shifts compute but adds network latency, quotas, and provider cost.</td><td>Model latency, tool latency, end-to-end p50/p95/p99, retries, saturation, spend.</td><td>Model routing, capacity tests, circuit breakers, retry budgets, admission control.</td></tr>
+                </tbody></table>
+            </div>
+            <div class="callout"><strong>Benchmark protocol:</strong> test representative short, median, and worst-case tasks at expected and burst concurrency. Record warm and cold starts, peak process working set, CPU time, state bytes, token use, fan-out, model/tool latency, failures, and cost. Establish budgets and fail requests safely when a budget is exhausted; OWASP classifies unbounded consumption as a major GenAI risk.</div>
+        </section>
+
+        <section class="content" id="controls">
+            <div class="section-head">
+                <h2>Security and complete privacy controls</h2>
+                <p>The gateway minimizes outbound tool results. A production privacy program must protect the entire lifecycle: collection, authorization, processing, storage, disclosure, retention, deletion, audit, and incident response.</p>
+            </div>
+            <div class="control-table">
+                <table><thead><tr><th>Control plane</th><th>Production requirement</th><th>Gateway coverage</th><th>Residual risk</th></tr></thead><tbody>
+                    <tr><td>Identity and authorization</td><td>Authenticate every actor and request; authorize source rows and operations; use least-privilege scopes and validate token audience.</td><td>Not provided. The upstream tool must authorize before computation.</td><td>Cross-user access, confused deputy behavior, overbroad tools, privilege escalation.</td></tr>
+                    <tr><td>MCP credentials and sessions</td><td>Never pass through client tokens. Use separate downstream credentials, exact redirects, PKCE/state for HTTP, secure sessions, and environment-provided credentials for stdio.</td><td>No credentials are needed by this local evidence run.</td><td>Token theft, session hijacking, SSRF, malicious authorization endpoints.</td></tr>
+                    <tr><td>Tenant and storage isolation</td><td>Namespace durable stores per user/tenant; isolate checkpoints, memory, files, vectors, caches, and backups.</td><td>Not provided.</td><td>Cross-tenant memory retrieval, stale data, residency and deletion failures.</td></tr>
+                    <tr><td>Tool and execution safety</td><td>Allowlist tools, validate arguments and outputs, sandbox code/shell/filesystem access, restrict egress, and require approval for high-impact actions.</td><td>Results are replaced after authorized execution; arguments and side effects are not controlled.</td><td>Prompt injection, excessive agency, host compromise, destructive side effects.</td></tr>
+                    <tr><td>Data minimization</td><td>Classify data, minimize fields and retention, bound aggregates, suppress small cohorts, and review schema metadata.</td><td>Schema-only default, synthetic examples, opt-in aggregates, cohort suppression.</td><td>Field-name disclosure, differencing attacks, repeated-query inference, approved passthrough.</td></tr>
+                    <tr><td>Telemetry and model providers</td><td>Exclude payloads and secrets from logs/traces; define encryption, region, retention, training, subprocessors, deletion, and incident terms.</td><td>Evidence avoids model calls and API keys; deployment telemetry is outside the gateway.</td><td>Prompt/result retention, provider access, trace leakage, unsupported residency claims.</td></tr>
+                    <tr><td>Governance and assurance</td><td>Maintain purpose/legal basis, consent where required, DPIAs, policy ownership, audit trails, evaluation sets, red-team tests, incident playbooks, and subject-rights workflows.</td><td>Versionable result policy and reproducible canary evidence only.</td><td>Policy drift, untested attacks, incomplete deletion, unverifiable compliance claims.</td></tr>
+                </tbody></table>
+            </div>
+            <div class="callout"><strong>Prompt injection remains unsolved by prompting alone.</strong> OWASP documents direct, indirect, multimodal, obfuscated, and split-payload attacks. Treat all external content as untrusted, segregate it from instructions, validate model outputs deterministically, minimize authority, and put irreversible or high-impact actions behind human approval.</div>
+        </section>
+
+        <section class="content" id="checklist">
+            <div class="section-head"><h2>Production release gate</h2><p>Do not promote because a demo succeeds. Require recorded owners, thresholds, evidence, and rollback criteria for every gate.</p></div>
+            <div class="checklist">
+                <article class="check"><h3>Architecture fit approved</h3><p>Document why the full harness is needed and why a lighter agent or deterministic graph is insufficient.</p></article>
+                <article class="check"><h3>Authority is bounded</h3><p>Inventory tools, scopes, side effects, filesystem/shell access, egress, sandbox rules, and approval points.</p></article>
+                <article class="check"><h3>Capacity budgets pass</h3><p>Load-test p95/p99 latency, peak memory, CPU, state, tokens, fan-out, downstream saturation, and cost.</p></article>
+                <article class="check"><h3>Failure behavior is proven</h3><p>Exercise timeout, retry, cancellation, duplicate execution, provider outage, tool failure, and checkpoint recovery.</p></article>
+                <article class="check"><h3>Privacy lifecycle is owned</h3><p>Approve classification, purpose, residency, retention, deletion, provider terms, passthrough exceptions, and incident response.</p></article>
+                <article class="check"><h3>Isolation is tested</h3><p>Test tenant namespaces, memory and checkpoint boundaries, credential separation, session authorization, and cache isolation.</p></article>
+                <article class="check"><h3>Observability is safe</h3><p>Alert on latency, errors, cost, policy decisions, and unusual fan-out without copying sensitive payloads into telemetry.</p></article>
+                <article class="check"><h3>Evaluation is continuous</h3><p>Run offline regressions and sampled online evaluators for privacy, safety, correctness, and resource-budget violations.</p></article>
+            </div>
+        </section>
+
+        <section class="content" id="sources">
+            <div class="section-head"><h2>Authoritative sources</h2><p>Accessed for this report in 2026. Product behavior and protocol requirements can change; pin dependencies and re-review the applicable version before release.</p></div>
+            <div class="sources">
+                <a class="source" href="https://docs.langchain.com/oss/python/deepagents/overview"><strong>Deep Agents overview</strong><p>Harness scope, built-in capabilities, production positioning, and lighter alternatives.</p><span>LANGCHAIN DOCS</span></a>
+                <a class="source" href="https://docs.langchain.com/oss/python/deepagents/customization"><strong>Deep Agents customization</strong><p>Middleware concurrency, backends, subagents, tenant namespaces, approval, context, timeout, and retry behavior.</p><span>LANGCHAIN DOCS</span></a>
+                <a class="source" href="https://github.com/langchain-ai/deepagents"><strong>Deep Agents repository</strong><p>Official security model: agents can perform anything their tools permit; enforce boundaries at tools and sandboxes.</p><span>OFFICIAL GITHUB</span></a>
+                <a class="source" href="https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices"><strong>MCP security practices</strong><p>Token passthrough prohibition, confused deputy, SSRF, sessions, local servers, scopes, and mitigations.</p><span>MCP 2025-06-18</span></a>
+                <a class="source" href="https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization"><strong>MCP authorization</strong><p>OAuth-related HTTP requirements, token audience validation, and stdio credential guidance.</p><span>MCP 2025-06-18</span></a>
+                <a class="source" href="https://genai.owasp.org/llm-top-10/"><strong>OWASP GenAI Top 10</strong><p>Prompt injection, sensitive disclosure, excessive agency, improper output handling, and unbounded consumption.</p><span>OWASP 2025</span></a>
+                <a class="source" href="https://docs.langchain.com/langsmith/observability"><strong>LangSmith observability</strong><p>Tracing, dashboards, alerts, automations, feedback, and production performance analysis.</p><span>LANGCHAIN DOCS</span></a>
+                <a class="source" href="https://docs.langchain.com/langsmith/evaluation"><strong>LangSmith evaluation</strong><p>Offline regression datasets and filtered or sampled online production evaluation.</p><span>LANGCHAIN DOCS</span></a>
+                <a class="source" href="https://docs.langchain.com/langsmith/deployment"><strong>LangSmith deployment</strong><p>Durable execution, streaming, horizontal scaling, and managed, hybrid, self-hosted, or standalone choices.</p><span>LANGCHAIN DOCS</span></a>
             </div>
         </section>
 
@@ -197,7 +303,7 @@
             </div>
         </section>
 
-        <footer><span>Generated by <code>scripts/capture-privacy-evidence.py</code><br>Capture: 2026-07-19T07:37:45+00:00</span><span>Schema-only claim applies to tested response paths.<br>Approved passthrough intentionally discloses complete successful results.</span></footer>
+        <footer><span>Generated by <code>scripts/capture-privacy-evidence.py</code><br>Capture: 2026-07-19T08:19:22+00:00</span><span>Schema-only claim applies to tested response paths.<br>Approved passthrough intentionally discloses complete successful results.</span></footer>
     </div>
     <div class="toast" role="status" aria-live="polite">Copied to clipboard</div>
     <script>

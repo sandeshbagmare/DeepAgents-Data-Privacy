@@ -393,6 +393,29 @@ MCP server behavior, or gateway host security. Tool arguments chosen by the agen
 visible to the upstream MCP server. Tool metadata and field names remain visible to
 the model. A compromised gateway process can observe upstream results in memory.
 
+### Deep Agents production fit
+
+Official Deep Agents documentation describes the harness as production-ready, but the
+full harness is not automatically the right production architecture. Planning,
+filesystems, memory, summarization, subagents, middleware, checkpoints, interpreters,
+and MCP subprocesses can increase context, latency, CPU, memory, process count, and
+cost. Use a lighter LangChain `create_agent` for bounded assistants or an explicit
+LangGraph workflow when deterministic transitions and predictable execution matter
+more than open-ended autonomy.
+
+There is no authoritative fixed CPU or RAM requirement for Deep Agents. Benchmark the
+actual model, tools, backends, payloads, and concurrency. Record peak working set and
+CPU time by process, p50/p95/p99 latency, state and checkpoint bytes, token use, tool
+and subagent fan-out, retries, queue time, open handles, downstream saturation, and
+cost. Enforce tested limits for time, tokens, calls, fan-out, concurrency, payload
+size, memory, and spend.
+
+Deep Agents follows a trust-the-LLM execution model: an agent can perform anything its
+tools permit. Prompts are therefore not security boundaries. Production deployments
+must enforce least privilege, authorization, sandboxing, tenant isolation, network and
+filesystem restrictions, human approval for high-impact actions, safe telemetry, and
+continuous offline and online evaluation outside the model.
+
 Schema-only mode minimizes disclosure but does not prove formal anonymity. Aggregate
 mode can support inference through repeated or overlapping queries. Production systems
 should add authentication, authorization, schema allowlists, query auditing, rate
@@ -402,6 +425,15 @@ retention controls, and an independent security review.
 Raw passthrough intentionally removes the result privacy guarantee for selected tools.
 Tool authorization and data classification must be enforced upstream; the gateway does
 not inspect or partially redact an approved passthrough result.
+
+The complete privacy lifecycle also requires identity, purpose and legal-basis review,
+data classification, consent where applicable, encryption, secrets management,
+residency, provider and subprocessor terms, retention, deletion, subject-rights
+workflows, DLP, audit governance, incident response, and independent assurance. This
+package does not provide those controls. The generated
+[production and privacy report](docs/assets/privacy-evidence.html#production)
+separates official guidance, local evidence, and deployment recommendations and links
+to the authoritative Deep Agents, MCP, OWASP, and LangSmith sources.
 
 See [docs/privacy-architecture.md](docs/privacy-architecture.md) for the detailed threat
 model and implementation rationale. VS Code can launch the local server using
