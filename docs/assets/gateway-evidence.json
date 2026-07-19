@@ -1,76 +1,77 @@
 {
   "capture": {
+    "generated_at_utc": "2026-07-19T07:37:45+00:00",
     "transport": "stdio",
     "model_request_made": false,
     "api_key_required": false,
     "platform": "win32"
   },
   "processes": {
-    "gateway_pid": 20092,
+    "gateway_pid": 25260,
     "descendant_pids": [
-      11980,
-      17136,
-      24800,
-      20628
+      20308,
+      35888,
+      21444,
+      13184
     ],
     "checked_process_ids": [
-      20092,
-      11980,
-      17136,
-      24800,
-      20628
+      25260,
+      20308,
+      35888,
+      21444,
+      13184
     ]
   },
   "network": {
     "command": "Get-NetTCPConnection filtered by gateway and descendant process IDs",
     "connections": [
       {
-        "OwningProcess": 20628,
+        "OwningProcess": 20308,
         "State": 100,
         "LocalAddress": "0.0.0.0",
-        "LocalPort": 55072,
+        "LocalPort": 65436,
         "RemoteAddress": "0.0.0.0",
         "RemotePort": 0
       },
       {
-        "OwningProcess": 11980,
+        "OwningProcess": 13184,
         "State": 100,
         "LocalAddress": "0.0.0.0",
-        "LocalPort": 55068,
+        "LocalPort": 61171,
         "RemoteAddress": "0.0.0.0",
         "RemotePort": 0
       },
       {
-        "OwningProcess": 20628,
+        "OwningProcess": 20308,
         "State": 5,
         "LocalAddress": "127.0.0.1",
-        "LocalPort": 55072,
+        "LocalPort": 65436,
         "RemoteAddress": "127.0.0.1",
-        "RemotePort": 55071
+        "RemotePort": 65435
       },
       {
-        "OwningProcess": 20628,
+        "OwningProcess": 20308,
         "State": 5,
         "LocalAddress": "127.0.0.1",
-        "LocalPort": 55071,
+        "LocalPort": 65435,
         "RemoteAddress": "127.0.0.1",
-        "RemotePort": 55072
+        "RemotePort": 65436
       },
       {
-        "OwningProcess": 11980,
+        "OwningProcess": 13184,
         "State": 5,
         "LocalAddress": "127.0.0.1",
-        "LocalPort": 55068,
+        "LocalPort": 61171,
         "RemoteAddress": "127.0.0.1",
-        "RemotePort": 55067
+        "RemotePort": 61170
       },
       {
-        "OwningProcess": 11980,
+        "OwningProcess": 13184,
         "State": 5,
         "LocalAddress": "127.0.0.1",
-        "LocalPort": 55067,
+        "LocalPort": 61170,
         "RemoteAddress": "127.0.0.1",
-        "RemotePort": 55068
+        "RemotePort": 61171
       }
     ]
   },

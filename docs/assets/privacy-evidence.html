@@ -3,41 +3,221 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MCP privacy gateway evidence</title>
+    <meta name="description" content="Reproducible proof that MCP tools process complete data while the LLM receives only safe structural output.">
+    <title>Deep Agents MCP privacy proof</title>
   <style>
-    :root { color-scheme: dark; --ink:#f5f7f4; --muted:#a9b5af; --green:#62e6a7; --cyan:#77d7f5; --line:#33423c; }
+        :root {
+            color-scheme: dark;
+            --canvas:#0b0e0d;
+            --surface:#121714;
+            --surface-2:#18201c;
+            --paper:#edf2ec;
+            --muted:#9daaa3;
+            --line:#314039;
+            --mint:#70e2aa;
+            --cyan:#7bd7ed;
+            --amber:#f2c66d;
+            --coral:#ff8d78;
+        }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; background:#0f1714; color:var(--ink); font-family:Consolas,"Courier New",monospace; }
-    main { width:min(1180px,calc(100vw - 40px)); margin:24px auto; border:1px solid var(--line); background:#17211d; box-shadow:0 24px 60px #0008; }
-    header { display:flex; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--line); }
-    h1 { margin:0; font-family:Georgia,serif; font-size:25px; letter-spacing:0; }
-    .pass { color:var(--green); font-weight:700; }
-    .stats { display:grid; grid-template-columns:repeat(5,1fr); border-bottom:1px solid var(--line); }
-    .stat { padding:18px; border-right:1px solid var(--line); color:var(--muted); font-size:12px; }
-    .stat:last-child { border-right:0; } .stat strong { display:block; margin-top:7px; color:var(--ink); font-size:22px; }
-    .body { display:grid; grid-template-columns:330px 1fr; }
-    aside { padding:24px; border-right:1px solid var(--line); }
-    aside h2 { margin:0 0 18px; font-family:Georgia,serif; font-size:18px; }
-    aside p { color:var(--muted); font-size:13px; line-height:1.55; }
-    code { color:var(--cyan); } .proof { padding:20px; overflow:hidden; } table { width:100%; border-collapse:collapse; font-size:12px; } th,td { padding:12px 8px; border-bottom:1px solid var(--line); text-align:left; } th { color:var(--muted); font-weight:400; }
-    footer { padding:14px 24px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
-    @media(max-width:820px) { .stats{grid-template-columns:1fr 1fr} .body{grid-template-columns:1fr} aside{border-right:0;border-bottom:1px solid var(--line)} }
+        html { scroll-behavior:smooth; }
+        body { margin:0; min-height:100vh; background:var(--canvas); color:var(--paper); font-family:"Segoe UI",Tahoma,sans-serif; letter-spacing:0; }
+        body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.22; background-image:linear-gradient(#253029 1px,transparent 1px),linear-gradient(90deg,#253029 1px,transparent 1px); background-size:40px 40px; mask-image:linear-gradient(to bottom,#000,transparent 70%); }
+        a { color:inherit; }
+        button,a.button { min-height:40px; display:inline-flex; align-items:center; justify-content:center; gap:8px; border:1px solid var(--line); border-radius:6px; padding:0 14px; background:var(--surface-2); color:var(--paper); font:600 12px Consolas,"Courier New",monospace; text-decoration:none; cursor:pointer; }
+        button:hover,a.button:hover { border-color:var(--mint); color:var(--mint); }
+        button:focus-visible,a:focus-visible { outline:2px solid var(--cyan); outline-offset:3px; }
+        .primary { background:var(--mint)!important; color:#07100b!important; border-color:var(--mint)!important; }
+        .shell { position:relative; width:min(1240px,calc(100vw - 40px)); margin:0 auto; }
+        nav { height:72px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
+        .brand { display:flex; align-items:center; gap:12px; font:700 13px Consolas,"Courier New",monospace; }
+        .mark { width:32px; height:32px; display:grid; place-items:center; border:1px solid var(--mint); color:var(--mint); font-size:15px; }
+        .nav-actions { display:flex; gap:8px; }
+        .hero { min-height:540px; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr); gap:58px; align-items:center; padding:64px 0 72px; }
+        .eyebrow { margin:0 0 18px; color:var(--mint); font:700 12px Consolas,"Courier New",monospace; text-transform:uppercase; }
+        h1 { max-width:760px; margin:0; font-family:Georgia,"Times New Roman",serif; font-size:clamp(44px,6vw,78px); font-weight:500; line-height:.98; letter-spacing:0; }
+        .lede { max-width:700px; margin:26px 0 30px; color:var(--muted); font-size:18px; line-height:1.65; }
+        .hero-actions { display:flex; flex-wrap:wrap; gap:10px; }
+        .terminal { border:1px solid var(--line); background:#080b09; box-shadow:14px 14px 0 #1e2923; }
+        .terminal-head { height:42px; display:flex; align-items:center; justify-content:space-between; padding:0 14px; border-bottom:1px solid var(--line); color:var(--muted); font:11px Consolas,"Courier New",monospace; }
+        .terminal-body { padding:22px; font:13px/1.8 Consolas,"Courier New",monospace; }
+        .prompt { color:var(--cyan); } .ok { color:var(--mint); } .quiet { color:var(--muted); }
+        .status-line { display:flex; align-items:center; gap:8px; color:var(--mint); font-weight:700; }
+        .status-dot { width:8px; height:8px; background:var(--mint); box-shadow:0 0 18px var(--mint); }
+        .stats { display:grid; grid-template-columns:repeat(5,1fr); border:1px solid var(--line); background:var(--surface); }
+        .stat { min-height:126px; padding:22px; border-right:1px solid var(--line); color:var(--muted); font:11px Consolas,"Courier New",monospace; text-transform:uppercase; }
+        .stat:last-child { border-right:0; }
+        .stat strong { display:block; margin-top:16px; color:var(--paper); font:500 35px Georgia,"Times New Roman",serif; }
+        section.content { padding:92px 0; }
+        .section-head { display:flex; justify-content:space-between; gap:40px; align-items:end; margin-bottom:34px; }
+        h2 { margin:0; font:500 34px Georgia,"Times New Roman",serif; letter-spacing:0; }
+        .section-head p { max-width:560px; margin:0; color:var(--muted); line-height:1.6; }
+        .boundary { display:grid; grid-template-columns:1fr 120px 1fr; align-items:stretch; }
+        .boundary-card { border:1px solid var(--line); padding:28px; background:var(--surface); }
+        .boundary-card .label { color:var(--muted); font:11px Consolas,"Courier New",monospace; text-transform:uppercase; }
+        .boundary-card h3 { margin:12px 0 20px; font:500 24px Georgia,"Times New Roman",serif; }
+        .boundary-card ul { margin:0; padding:0; list-style:none; display:grid; gap:10px; color:var(--muted); font-size:14px; }
+        .boundary-card li::before { content:"+"; margin-right:9px; color:var(--mint); }
+        .gate { display:grid; place-items:center; border-top:1px solid var(--line); border-bottom:1px solid var(--line); color:var(--amber); font:700 11px/1.5 Consolas,"Courier New",monospace; text-align:center; }
+        .proof-grid { display:grid; grid-template-columns:340px 1fr; border:1px solid var(--line); background:var(--surface); }
+        .process { padding:28px; border-right:1px solid var(--line); }
+        .process h3 { margin:0 0 18px; font:500 22px Georgia,"Times New Roman",serif; }
+        .process p { color:var(--muted); font-size:13px; line-height:1.65; }
+        code { color:var(--cyan); font-family:Consolas,"Courier New",monospace; }
+        .pid { display:block; margin:18px 0; padding:14px; border-left:3px solid var(--cyan); background:#0d1210; color:var(--paper); font:12px/1.7 Consolas,"Courier New",monospace; overflow-wrap:anywhere; }
+        .proof { padding:12px 24px 20px; overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        th,td { padding:16px 10px; border-bottom:1px solid var(--line); text-align:left; }
+        th { color:var(--muted); font:400 11px Consolas,"Courier New",monospace; text-transform:uppercase; }
+        .type { color:var(--cyan); font-family:Consolas,"Courier New",monospace; }
+        .zero { display:inline-grid; min-width:30px; height:25px; place-items:center; border:1px solid #356b50; border-radius:4px; color:var(--mint); font:700 11px Consolas,"Courier New",monospace; }
+        .artifacts { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+        .artifact { min-height:150px; padding:22px; border:1px solid var(--line); background:var(--surface); text-decoration:none; }
+        .artifact:hover { border-color:var(--cyan); }
+        .artifact span { color:var(--cyan); font:11px Consolas,"Courier New",monospace; }
+        .artifact h3 { margin:18px 0 8px; font-size:16px; }
+        .artifact p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+        .runbook { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .run-step { display:grid; grid-template-columns:52px 1fr; gap:18px; padding:24px; border:1px solid var(--line); background:var(--surface); }
+        .step-number { width:42px; height:42px; display:grid; place-items:center; border:1px solid var(--amber); color:var(--amber); font:700 12px Consolas,"Courier New",monospace; }
+        .run-step h3 { margin:0 0 8px; font-size:16px; } .run-step p { margin:0; color:var(--muted); font-size:13px; line-height:1.55; }
+        .command { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:14px; padding:11px 12px; background:#080b09; color:var(--cyan); font:12px Consolas,"Courier New",monospace; overflow-wrap:anywhere; }
+        .command button { min-height:30px; padding:0 9px; flex:0 0 auto; }
+        footer { display:flex; justify-content:space-between; gap:24px; padding:26px 0 36px; border-top:1px solid var(--line); color:var(--muted); font:11px/1.6 Consolas,"Courier New",monospace; }
+        .toast { position:fixed; right:20px; bottom:20px; z-index:5; padding:12px 16px; border:1px solid var(--mint); background:#101914; color:var(--mint); font:12px Consolas,"Courier New",monospace; opacity:0; transform:translateY(10px); transition:.18s ease; pointer-events:none; }
+        .toast.show { opacity:1; transform:translateY(0); }
+        @media(max-width:920px) {
+            .hero { grid-template-columns:1fr; min-height:auto; } .stats { grid-template-columns:repeat(2,1fr); } .stat { border-bottom:1px solid var(--line); }
+            .boundary { grid-template-columns:1fr; } .gate { min-height:80px; border-left:1px solid var(--line); border-right:1px solid var(--line); }
+            .proof-grid { grid-template-columns:1fr; } .process { border-right:0; border-bottom:1px solid var(--line); } .artifacts { grid-template-columns:1fr 1fr; }
+        }
+        @media(max-width:620px) {
+            .shell { width:min(100% - 24px,1240px); } nav { height:auto; min-height:68px; align-items:flex-start; padding:16px 0; gap:14px; } .brand span:last-child { display:none; }
+            .nav-actions { flex-wrap:wrap; justify-content:flex-end; } .nav-actions .button:not(.primary) { display:none; } h1 { font-size:42px; } .hero { padding:46px 0 58px; gap:40px; }
+            .stats { grid-template-columns:1fr 1fr; } .stat { min-height:105px; padding:16px; } .stat strong { font-size:28px; } section.content { padding:64px 0; }
+            .section-head { display:block; } .section-head p { margin-top:14px; } .artifacts,.runbook { grid-template-columns:1fr; } footer { display:block; }
+        }
+        @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .toast { transition:none; } }
   </style>
 </head>
-<body><main>
-  <header><h1>Deep Agents MCP privacy gateway proof</h1><span class="pass">ALL CHECKS PASS</span></header>
-  <section class="stats">
-    <div class="stat">Tools exercised<strong>5</strong></div>
-    <div class="stat">Known secrets blocked<strong>14</strong></div>
-    <div class="stat">Observed leaks<strong>0</strong></div>
-    <div class="stat">External TCP<strong>0</strong></div>
-    <div class="stat">Response classes<strong>5</strong></div>
-  </section>
-  <div class="body"><aside>
-    <h2>Process boundary</h2>
-    <p>Client communicates with gateway over <code>stdio</code>. Gateway launches the deliberately sensitive upstream fixture as a child process.</p>
-    <p>Gateway PID <strong>20092</strong><br>Observed child PIDs <strong>11980, 17136, 24800, 20628</strong></p>
-    <p>Windows <code>Get-NetTCPConnection</code> found 6 local runtime entries and <strong>0 external connections</strong>. MCP messages were exchanged through stdin/stdout.</p>
-    </aside><section class="proof"><table><thead><tr><th>Tool</th><th>Class</th><th>Safe bytes</th><th>Leaks</th></tr></thead><tbody><tr><td>customer_rows</td><td>table</td><td>537 B</td><td class="pass">0</td></tr><tr><td>infrastructure_status</td><td>structured</td><td>471 B</td><td class="pass">0</td></tr><tr><td>nested_metrics</td><td>structured</td><td>394 B</td><td class="pass">0</td></tr><tr><td>private_note</td><td>structured</td><td>212 B</td><td class="pass">0</td></tr><tr><td>private_failure</td><td>error</td><td>73 B</td><td class="pass">0</td></tr></tbody></table></section></div>
-  <footer>Generated by scripts/capture-privacy-evidence.py without an API key or model request.</footer>
-</main></body></html>
+<body>
+    <div class="shell">
+        <nav aria-label="Evidence navigation">
+            <div class="brand"><span class="mark">DP</span><span>DEEP AGENTS / PRIVACY GATEWAY</span></div>
+            <div class="nav-actions">
+                <a class="button" href="../confluence-implementation-guide.md">Confluence guide</a>
+                <a class="button primary" href="../../../RUN_DEMO.cmd">Run demo</a>
+            </div>
+        </nav>
+
+        <header class="hero">
+            <div>
+                <p class="eyebrow">Reproducible MCP boundary evidence</p>
+                <h1>Full data for tools. Safe context for models.</h1>
+                <p class="lede">The upstream tool executes against complete authorized records. FastMCP middleware replaces its outbound result before the agent can observe it, leaving schema, types, and synthetic examples.</p>
+                <div class="hero-actions">
+                    <a class="button primary" href="#proof">Inspect the proof</a>
+                    <button type="button" data-copy=".\RUN_DEMO.cmd">Copy one-click command</button>
+                </div>
+            </div>
+            <div class="terminal" aria-label="Demo execution result">
+                <div class="terminal-head"><span>RUN_DEMO.cmd</span><span class="status-line"><span class="status-dot"></span>PASS</span></div>
+                <div class="terminal-body">
+                    <div><span class="prompt">&gt;</span> capture privacy evidence</div>
+                    <div class="ok">[pass] upstream tools exercised: 5</div>
+                    <div class="ok">[pass] selected canaries blocked: 14/14</div>
+                    <div class="ok">[pass] observed value leaks: 0</div>
+                    <div class="ok">[pass] external TCP connections: 0</div>
+                    <div class="quiet">[info] model requests: 0 / API keys: none</div>
+                </div>
+            </div>
+        </header>
+
+        <section class="stats" aria-label="Evidence summary">
+            <div class="stat">Tools exercised<strong>5</strong></div>
+            <div class="stat">Canaries blocked<strong>14</strong></div>
+            <div class="stat">Observed leaks<strong>0</strong></div>
+            <div class="stat">External TCP<strong>0</strong></div>
+            <div class="stat">Response classes<strong>5</strong></div>
+        </section>
+
+        <section class="content" id="boundary">
+            <div class="section-head">
+                <h2>One call, two data states</h2>
+                <p>The tool is not starved of information. It completes its authorized computation first. Only the response crossing into the agent process is minimized.</p>
+            </div>
+            <div class="boundary">
+                <article class="boundary-card">
+                    <span class="label">Trusted execution zone</span>
+                    <h3>Tool sees complete data</h3>
+                    <ul><li>All authorized source rows</li><li>Observed identifiers and values</li><li>Full filtering and calculation context</li><li>Original successful ToolResult</li></ul>
+                </article>
+                <div class="gate">FASTMCP<br>RESULT<br>MIDDLEWARE</div>
+                <article class="boundary-card">
+                    <span class="label">Agent and model boundary</span>
+                    <h3>LLM sees a safe sample</h3>
+                    <ul><li>Column names and inferred types</li><li>Fixed synthetic example values</li><li>Explicit privacy policy metadata</li><li>No source rows or selected canaries</li></ul>
+                </article>
+            </div>
+        </section>
+
+        <section class="content" id="proof">
+            <div class="section-head">
+                <h2>Captured proof</h2>
+                <p>Five deliberately sensitive response classes crossed a real gateway and upstream process tree over stdio. Every selected fixture canary was checked after middleware replacement.</p>
+            </div>
+            <div class="proof-grid">
+                <aside class="process">
+                    <h3>Observed process tree</h3>
+                    <p>The client communicates with the gateway over <code>stdio</code>. The gateway launches the sensitive upstream fixture as a descendant process.</p>
+                    <span class="pid">gateway: 25260<br>children: 20308, 35888, 21444, 13184</span>
+                    <p><code>Get-NetTCPConnection</code> found 6 local runtime entries and <strong>0 external connections</strong>. No model request or API key was used.</p>
+                </aside>
+                <div class="proof">
+                    <table><thead><tr><th>Tool</th><th>Safe class</th><th>Response</th><th>Leaks</th></tr></thead><tbody><tr><td><strong>customer_rows</strong></td><td><span class="type">table</span></td><td>537 B</td><td><span class="zero">0</span></td></tr><tr><td><strong>infrastructure_status</strong></td><td><span class="type">structured</span></td><td>471 B</td><td><span class="zero">0</span></td></tr><tr><td><strong>nested_metrics</strong></td><td><span class="type">structured</span></td><td>394 B</td><td><span class="zero">0</span></td></tr><tr><td><strong>private_note</strong></td><td><span class="type">structured</span></td><td>212 B</td><td><span class="zero">0</span></td></tr><tr><td><strong>private_failure</strong></td><td><span class="type">error</span></td><td>73 B</td><td><span class="zero">0</span></td></tr></tbody></table>
+                </div>
+            </div>
+        </section>
+
+        <section class="content" id="artifacts">
+            <div class="section-head"><h2>Audit artifacts</h2><p>Open the source evidence directly. The screenshot is presentation evidence; JSON and network logs are the reviewable record.</p></div>
+            <div class="artifacts">
+                <a class="artifact" href="gateway-evidence.json"><span>JSON</span><h3>Machine evidence</h3><p>Per-tool proof, process IDs, connection records, and summary.</p></a>
+                <a class="artifact" href="gateway-network.log"><span>LOG</span><h3>Network capture</h3><p>Windows process and socket classification from the same run.</p></a>
+                <a class="artifact" href="privacy-evidence.png"><span>PNG</span><h3>Report screenshot</h3><p>Confluence-ready visual evidence captured from this page.</p></a>
+                <a class="artifact" href="../confluence-implementation-guide.md"><span>MD</span><h3>Implementation guide</h3><p>Library usage and the exact standalone FastMCP middleware pattern.</p></a>
+            </div>
+        </section>
+
+        <section class="content" id="run">
+            <div class="section-head"><h2>Demo in one click</h2><p>No model credential is needed. The launcher creates or reuses the local environment, installs the package, runs proof tests, regenerates evidence, and opens this page.</p></div>
+            <div class="runbook">
+                <article class="run-step"><span class="step-number">01</span><div><h3>Windows Explorer</h3><p>Double-click the root launcher.</p><div class="command"><span>RUN_DEMO.cmd</span><button type="button" data-copy="RUN_DEMO.cmd">Copy</button></div></div></article>
+                <article class="run-step"><span class="step-number">02</span><div><h3>PowerShell or terminal</h3><p>Run the same launcher from the repository root.</p><div class="command"><span>.\RUN_DEMO.cmd</span><button type="button" data-copy=".\RUN_DEMO.cmd">Copy</button></div></div></article>
+            </div>
+        </section>
+
+        <footer><span>Generated by <code>scripts/capture-privacy-evidence.py</code><br>Capture: 2026-07-19T07:37:45+00:00</span><span>Schema-only claim applies to tested response paths.<br>Approved passthrough intentionally discloses complete successful results.</span></footer>
+    </div>
+    <div class="toast" role="status" aria-live="polite">Copied to clipboard</div>
+    <script>
+        const toast = document.querySelector('.toast');
+        document.querySelectorAll('[data-copy]').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const value = button.getAttribute('data-copy');
+                try {
+                    await navigator.clipboard.writeText(value);
+                } catch {
+                    const area = document.createElement('textarea');
+                    area.value = value;
+                    document.body.appendChild(area);
+                    area.select();
+                    document.execCommand('copy');
+                    area.remove();
+                }
+                toast.classList.add('show');
+                window.setTimeout(() => toast.classList.remove('show'), 1500);
+            });
+        });
+    </script>
+</body></html>

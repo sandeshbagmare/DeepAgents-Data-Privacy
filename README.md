@@ -17,6 +17,29 @@ enums, and binary values. Recursive references and nesting deeper than 32 levels
 replaced with withheld markers. Unknown objects remain opaque, and containers that
 cannot be traversed safely produce a generic withheld response.
 
+## Run the complete demo
+
+On Windows, double-click **`RUN_DEMO.cmd`** in the repository root. No model credential
+or API key is required. The launcher:
+
+1. Creates `.venv` when it does not already exist.
+2. Reuses the local package and test dependencies, installing them only when missing.
+3. Verifies all 34 deterministic MCP tools.
+4. Proves that a tool processes complete rows while its client receives only schema
+  and synthetic values.
+5. Regenerates the process, payload, and network evidence and opens the report.
+
+From PowerShell, the same one-click flow is:
+
+```powershell
+.\RUN_DEMO.cmd
+```
+
+The generated demo hub is
+[docs/assets/privacy-evidence.html](docs/assets/privacy-evidence.html). It links directly
+to the machine-readable JSON, network log, screenshot, and Confluence implementation
+guide.
+
 ## Install and plug in
 
 Python 3.11 or newer is required.
