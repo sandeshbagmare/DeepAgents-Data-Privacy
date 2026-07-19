@@ -9,6 +9,10 @@
 | Evidence date | Generated locally at validation time |
 | Repository | DeepAgents-Data-Privacy |
 
+The [IEEE-style structured-data privacy research paper](ieee-agentic-ai-data-privacy.md)
+provides the record, schema, key, collection, aggregate, and propagation threat model,
+control catalog, empirical claim boundary, and numbered research references.
+
 ## Executive summary
 
 Deep Agents can call MCP tools that return tables, nested objects, infrastructure state, text, and errors. Passing those responses directly to an agent allows observed values to enter the agent process and potentially a model request. This proposal inserts a dedicated privacy gateway process between the agent and each upstream MCP server.

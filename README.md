@@ -40,6 +40,12 @@ The generated demo hub is
 to the machine-readable JSON, network log, screenshot, and Confluence implementation
 guide.
 
+The [IEEE-style structured-data privacy research paper](docs/ieee-agentic-ai-data-privacy.md)
+analyzes tables, JSON objects, typed records, dynamic keys, nested collections,
+schemas, aggregates, and their propagation through Deep Agents context, memory,
+subagents, files, and traces. It connects those risks to lifecycle governance,
+differential privacy, release gates, and the repository's measured evidence.
+
 ## Install and plug in
 
 Python 3.11 or newer is required.

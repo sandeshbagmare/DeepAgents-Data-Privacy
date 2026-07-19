@@ -9,6 +9,10 @@
 | Middleware API | `fastmcp.server.middleware.middleware.Middleware` |
 | Interception hook | `Middleware.on_call_tool()` |
 
+For detailed table, JSON, typed-record, dynamic-key, nested-collection, schema,
+aggregate, and Deep Agents propagation analysis, see the
+[IEEE-style structured-data privacy research paper](ieee-agentic-ai-data-privacy.md).
+
 ## Executive summary
 
 An MCP tool can use the complete source dataset without sending that dataset to an

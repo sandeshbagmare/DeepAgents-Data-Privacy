@@ -265,7 +265,7 @@ def render_html(evidence: dict[str, Any]) -> str:
         th {{ color:var(--muted); font:400 11px Consolas,"Courier New",monospace; text-transform:uppercase; }}
         .type {{ color:var(--cyan); font-family:Consolas,"Courier New",monospace; }}
         .zero {{ display:inline-grid; min-width:30px; height:25px; place-items:center; border:1px solid #356b50; border-radius:4px; color:var(--mint); font:700 11px Consolas,"Courier New",monospace; }}
-        .artifacts {{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }}
+        .artifacts {{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }}
         .artifact {{ min-height:150px; padding:22px; border:1px solid var(--line); background:var(--surface); text-decoration:none; }}
         .artifact:hover {{ border-color:var(--cyan); }}
         .artifact span {{ color:var(--cyan); font:11px Consolas,"Courier New",monospace; }}
@@ -301,6 +301,7 @@ def render_html(evidence: dict[str, Any]) -> str:
             <div class="brand"><span class="mark">DP</span><span>DEEP AGENTS / PRIVACY GATEWAY</span></div>
             <div class="nav-actions">
                 <a class="button" href="#production">Production guide</a>
+                <a class="button" href="../ieee-agentic-ai-data-privacy.md">Research paper</a>
                 <a class="button" href="../confluence-implementation-guide.md">Confluence guide</a>
                 <a class="button primary" href="../../../RUN_DEMO.cmd">Run demo</a>
             </div>
@@ -463,6 +464,7 @@ def render_html(evidence: dict[str, Any]) -> str:
                 <a class="artifact" href="gateway-evidence.json"><span>JSON</span><h3>Machine evidence</h3><p>Per-tool proof, process IDs, connection records, and summary.</p></a>
                 <a class="artifact" href="gateway-network.log"><span>LOG</span><h3>Network capture</h3><p>Windows process and socket classification from the same run.</p></a>
                 <a class="artifact" href="privacy-evidence.png"><span>PNG</span><h3>Report screenshot</h3><p>Confluence-ready visual evidence captured from this page.</p></a>
+                <a class="artifact" href="../ieee-agentic-ai-data-privacy.md"><span>IEEE</span><h3>Structured-data paper</h3><p>Tables, JSON, schemas, dynamic keys, aggregates, Deep Agents propagation, and evidence bounds.</p></a>
                 <a class="artifact" href="../confluence-implementation-guide.md"><span>MD</span><h3>Implementation guide</h3><p>Library usage and the exact standalone FastMCP middleware pattern.</p></a>
             </div>
         </section>

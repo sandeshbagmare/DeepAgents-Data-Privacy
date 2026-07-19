@@ -2,6 +2,9 @@
 
 The Confluence-ready adoption proposal and current reproducible evidence package are
 documented in [confluence-proposal.md](confluence-proposal.md).
+The [IEEE-style structured-data privacy research paper](ieee-agentic-ai-data-privacy.md)
+analyzes field, key, record, collection, schema, aggregate, and Deep Agents propagation
+risks around this boundary.
 
 ## Goal
 

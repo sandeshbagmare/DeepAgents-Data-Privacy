@@ -1,9 +1,9 @@
 Deep Agents MCP Privacy Gateway - Network Proof
-Gateway PID: 6024
-Descendant PIDs: [30056, 15708, 30712, 17040]
-Checked PIDs: [6024, 30056, 15708, 30712, 17040]
+Gateway PID: 13112
+Descendant PIDs: [32392, 33216, 31632, 10424]
+Checked PIDs: [13112, 32392, 33216, 31632, 10424]
 Command: Get-NetTCPConnection filtered by checked PIDs
-Observed connections: [{"OwningProcess": 17040, "State": 100, "LocalAddress": "0.0.0.0", "LocalPort": 59655, "RemoteAddress": "0.0.0.0", "RemotePort": 0}, {"OwningProcess": 30056, "State": 100, "LocalAddress": "0.0.0.0", "LocalPort": 59110, "RemoteAddress": "0.0.0.0", "RemotePort": 0}, {"OwningProcess": 17040, "State": 5, "LocalAddress": "127.0.0.1", "LocalPort": 59655, "RemoteAddress": "127.0.0.1", "RemotePort": 59654}, {"OwningProcess": 17040, "State": 5, "LocalAddress": "127.0.0.1", "LocalPort": 59654, "RemoteAddress": "127.0.0.1", "RemotePort": 59655}, {"OwningProcess": 30056, "State": 5, "LocalAddress": "127.0.0.1", "LocalPort": 59110, "RemoteAddress": "127.0.0.1", "RemotePort": 59109}, {"OwningProcess": 30056, "State": 5, "LocalAddress": "127.0.0.1", "LocalPort": 59109, "RemoteAddress": "127.0.0.1", "RemotePort": 59110}]
+Observed connections: [{"OwningProcess": 10424, "State": 100, "LocalAddress": "0.0.0.0", "LocalPort": 59350, "RemoteAddress": "0.0.0.0", "RemotePort": 0}, {"OwningProcess": 32392, "State": 100, "LocalAddress": "0.0.0.0", "LocalPort": 59347, "RemoteAddress": "0.0.0.0", "RemotePort": 0}, {"OwningProcess": 10424, "State": 5, "LocalAddress": "127.0.0.1", "LocalPort": 59350, "RemoteAddress": "127.0.0.1", "RemotePort": 59349}, {"OwningProcess": 10424, "State": 5, "LocalAddress": "127.0.0.1", "LocalPort": 59349, "RemoteAddress": "127.0.0.1", "RemotePort": 59350}, {"OwningProcess": 32392, "State": 5, "LocalAddress": "127.0.0.1", "LocalPort": 59347, "RemoteAddress": "127.0.0.1", "RemotePort": 59346}, {"OwningProcess": 32392, "State": 5, "LocalAddress": "127.0.0.1", "LocalPort": 59346, "RemoteAddress": "127.0.0.1", "RemotePort": 59347}]
 Runtime loopback entries: 6
 External connections: 0
 Result: PASS - no external TCP connections during stdio evidence capture
