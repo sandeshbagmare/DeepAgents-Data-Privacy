@@ -3,8 +3,17 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
+from collections import namedtuple
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
+from pathlib import Path
+from uuid import UUID
 
 from fastmcp import Client, FastMCP
+from pydantic import BaseModel
 
 from deepagents_mcp_privacy import (
     PrivacyPolicy,
@@ -131,6 +140,95 @@ def test_empty_and_scalar_values_fail_closed() -> None:
     assert sanitize_value([])["shape"] == {"items": None, "type": "array"}
     assert sanitize_value(None)["shape"]["example"] is None
     assert sanitize_value(123)["shape"]["example"] == 0
+
+
+@dataclass
+class PrivateRecord:
+    customer_id: str
+    amount: Decimal
+
+
+class PrivateStatus(BaseModel):
+    hostname: str
+    observed_at: datetime
+
+
+class PrivateLevel(Enum):
+    CRITICAL = "private-critical"
+
+
+def test_common_python_structured_types_preserve_shape_only() -> None:
+    Coordinate = namedtuple("Coordinate", ["latitude", "longitude"])
+    cases = {
+        "tuple_table": (
+            ({"customer_name": "Alice", "amount": 12}, {"customer_name": "Bob", "amount": 20}),
+            ("Alice", "Bob", "12", "20"),
+        ),
+        "named_tuple": (Coordinate(51.5, -0.1), ("51.5", "-0.1")),
+        "dataclass": (PrivateRecord("C-001", Decimal("42.50")), ("C-001", "42.50")),
+        "pydantic": (
+            PrivateStatus(hostname="prod-01", observed_at=datetime(2026, 7, 19, 10, 30)),
+            ("prod-01", "2026", "10:30"),
+        ),
+        "set": ({"private-alpha", "private-beta"}, ("private-alpha", "private-beta")),
+        "frozen_set": (frozenset({"private-gamma"}), ("private-gamma",)),
+        "binary": (b"private-bytes", ("private-bytes",)),
+        "date": (date(2026, 7, 19), ("2026", "7", "19")),
+        "time": (time(10, 30), ("10:30",)),
+        "decimal": (Decimal("99.9"), ("99.9",)),
+        "uuid": (UUID("12345678-1234-5678-1234-567812345678"), ("12345678",)),
+        "path": (Path("C:/private/customer.csv"), ("private", "customer.csv")),
+        "enum": (PrivateLevel.CRITICAL, ("private-critical",)),
+    }
+
+    for value, secrets in cases.values():
+        safe = sanitize_value(value)
+        rendered = _render(safe)
+        assert safe["privacy"]["raw_data_shared"] is False
+        for secret in secrets:
+            assert secret not in rendered
+
+    assert sanitize_value(cases["tuple_table"][0])["source_kind"] == "table"
+    assert set(sanitize_value(cases["dataclass"][0])["shape"]) == {"customer_id", "amount"}
+    assert set(sanitize_value(cases["pydantic"][0])["shape"]) == {"hostname", "observed_at"}
+    assert sanitize_value(cases["set"][0])["shape"]["type"] == "array"
+
+
+def test_non_string_keys_cycles_and_depth_are_safely_bounded() -> None:
+    keyed = sanitize_value({7: "private-value", ("account", 1): 99})
+    assert set(keyed["shape"]) == {"SYNTHETIC_FIELD_1", "SYNTHETIC_FIELD_2"}
+    assert "private-value" not in _render(keyed)
+
+    cycle: dict[str, object] = {"label": "private-cycle"}
+    cycle["self"] = cycle
+    safe_cycle = sanitize_value(cycle)
+    assert safe_cycle["shape"]["self"] == {"type": "recursive_reference", "withheld": True}
+    assert "private-cycle" not in _render(safe_cycle)
+
+    deep: dict[str, object] = {"secret": "private-deep"}
+    for _ in range(40):
+        deep = {"nested": deep}
+    safe_deep = sanitize_value(deep)
+    assert "maximum_depth" in _render(safe_deep)
+    assert "private-deep" not in _render(safe_deep)
+
+
+def test_hostile_custom_mapping_fails_closed() -> None:
+    class HostileMapping(Mapping[str, object]):
+        def __iter__(self):
+            raise RuntimeError("private iterator failure")
+
+        def __len__(self) -> int:
+            return 1
+
+        def __getitem__(self, key: str) -> object:
+            raise RuntimeError(f"private value for {key}")
+
+    safe = sanitize_value(HostileMapping())
+
+    assert safe["source_kind"] == "unsupported"
+    assert safe["withheld"] is True
+    assert "private" not in _render(safe)
 
 
 def test_proxy_preserves_tool_schema_and_replaces_results() -> None:

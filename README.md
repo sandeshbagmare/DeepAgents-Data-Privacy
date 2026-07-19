@@ -11,6 +11,12 @@ aggregates. Tables, structured objects, infrastructure responses, and JSON encod
 text become safe structural descriptions. Unstructured text and unsupported content
 are withheld because arbitrary prose cannot be generically de-identified safely.
 
+The direct Python API also normalizes mappings, lists, tuples, named tuples,
+dataclasses, Pydantic models, sets, frozen sets, dates/times, decimals, UUIDs, paths,
+enums, and binary values. Recursive references and nesting deeper than 32 levels are
+replaced with withheld markers. Unknown objects remain opaque, and containers that
+cannot be traversed safely produce a generic withheld response.
+
 ## Install and plug in
 
 Python 3.11 or newer is required.
@@ -62,6 +68,10 @@ Use `sanitize_value(value)` when integrating the policy engine into another boun
 | Plain text | Withheld |
 | Upstream error | Generic error; upstream message withheld |
 | Images, audio, resources, mixed blocks | Withheld |
+
+MCP wire values are JSON-compatible by protocol. The additional Python datatype
+support applies when `sanitize_value()` or `create_private_proxy()` receives richer
+in-process return values before FastMCP serialization.
 
 Mapping keys that resemble emails, IP addresses, UUIDs, URLs, long tokens, or
 free-form values are replaced with `SYNTHETIC_FIELD_n`. Stable field names are exposed

@@ -3,10 +3,15 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
-from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Callable, Mapping, Sequence, Set
+from dataclasses import dataclass, field, fields, is_dataclass
+from datetime import date, datetime, time
+from decimal import Decimal
+from enum import Enum
 from numbers import Real
+from pathlib import PurePath
 from typing import Any
+from uuid import UUID
 
 import mcp.types as mt
 from fastmcp.server import create_proxy
@@ -14,6 +19,12 @@ from fastmcp.server.middleware.middleware import CallNext, Middleware, Middlewar
 from fastmcp.tools.base import ToolResult
 
 TextSanitizer = Callable[[str], str | Mapping[str, Any]]
+MAX_STRUCTURE_DEPTH = 32
+
+
+@dataclass(frozen=True)
+class _WithheldReference:
+    reason: str
 
 
 @dataclass(frozen=True)
@@ -45,29 +56,81 @@ def sanitize_value(
     tool_name: str = "",
 ) -> dict[str, Any]:
     active_policy = policy or PrivacyPolicy()
-    normalized = _normalize_value(value)
-    if isinstance(normalized, str):
-        sanitizer = active_policy.text_sanitizers.get(tool_name)
-        if sanitizer is None:
-            return _envelope(
-                kind="text",
-                safe={"withheld": True, "reason": "Unstructured text is withheld by default"},
-            )
-        normalized = _normalize_value(sanitizer(normalized))
+    try:
+        normalized = _normalize_value(value)
+        if isinstance(normalized, str):
+            sanitizer = active_policy.text_sanitizers.get(tool_name)
+            if sanitizer is None:
+                return _envelope(
+                    kind="text",
+                    safe={"withheld": True, "reason": "Unstructured text is withheld by default"},
+                )
+            normalized = _normalize_value(sanitizer(normalized))
 
-    rows = _find_rows(normalized, active_policy.row_keys)
-    if rows is not None:
-        return _sanitize_rows(rows, active_policy)
-    return _sanitize_structure(normalized, active_policy)
+        rows = _find_rows(normalized, active_policy.row_keys)
+        if rows is not None:
+            return _sanitize_rows(rows, active_policy)
+        return _sanitize_structure(normalized, active_policy)
+    except Exception:
+        return _envelope(
+            kind="unsupported",
+            safe={"withheld": True, "reason": "Value could not be safely generalized"},
+            policy=active_policy,
+        )
 
 
 def _normalize_value(value: Any) -> Any:
+    return _normalize_structure(value, seen=set(), depth=0)
+
+
+def _normalize_structure(value: Any, *, seen: set[int], depth: int) -> Any:
+    if depth > MAX_STRUCTURE_DEPTH:
+        return _WithheldReference("maximum_depth")
     if isinstance(value, str):
         try:
-            return json.loads(value)
+            decoded = json.loads(value)
         except json.JSONDecodeError:
             return value
-    return value
+        return _normalize_structure(decoded, seen=seen, depth=depth + 1)
+    if _is_scalar(value):
+        return value
+
+    identity = id(value)
+    if identity in seen:
+        return _WithheldReference("recursive_reference")
+    seen.add(identity)
+    try:
+        if isinstance(value, Mapping):
+            return {
+                str(key): _normalize_structure(item, seen=seen, depth=depth + 1)
+                for key, item in value.items()
+            }
+        if is_dataclass(value) and not isinstance(value, type):
+            return {
+                item.name: _normalize_structure(getattr(value, item.name), seen=seen, depth=depth + 1)
+                for item in fields(value)
+            }
+        model_dump = getattr(value, "model_dump", None)
+        if callable(model_dump):
+            return _normalize_structure(model_dump(mode="python"), seen=seen, depth=depth + 1)
+        as_dict = getattr(value, "_asdict", None)
+        if callable(as_dict):
+            return _normalize_structure(as_dict(), seen=seen, depth=depth + 1)
+        if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray, memoryview)):
+            return [_normalize_structure(item, seen=seen, depth=depth + 1) for item in value]
+        if isinstance(value, Set):
+            ordered = sorted(value, key=lambda item: (type(item).__name__, repr(item)))
+            return [_normalize_structure(item, seen=seen, depth=depth + 1) for item in ordered]
+        return value
+    finally:
+        seen.remove(identity)
+
+
+def _is_scalar(value: Any) -> bool:
+    return value is None or isinstance(
+        value,
+        (bool, Real, Decimal, str, bytes, bytearray, memoryview, date, time, UUID, PurePath, Enum),
+    )
 
 
 def _find_rows(value: Any, row_keys: Sequence[str]) -> list[Mapping[str, Any]] | None:
@@ -153,6 +216,8 @@ def _sanitize_structure(value: Any, policy: PrivacyPolicy) -> dict[str, Any]:
 
 
 def _shape(value: Any, policy: PrivacyPolicy) -> Any:
+    if isinstance(value, _WithheldReference):
+        return {"type": value.reason, "withheld": True}
     if isinstance(value, Mapping):
         return {
             _safe_field_name(str(key), index): {"withheld": True, "type": _type_name(item)}
@@ -186,7 +251,7 @@ def _dummy_value(column: str, types: Sequence[str], policy: PrivacyPolicy) -> An
 def _dummy_scalar(value: Any) -> Any:
     if isinstance(value, bool):
         return False
-    if isinstance(value, Real):
+    if isinstance(value, (Real, Decimal)):
         return 0
     if value is None:
         return None
@@ -198,10 +263,24 @@ def _type_name(value: Any) -> str:
         return "null"
     if isinstance(value, bool):
         return "boolean"
-    if isinstance(value, Real):
+    if isinstance(value, (Real, Decimal)):
         return "number"
     if isinstance(value, str):
         return "string"
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        return "binary"
+    if isinstance(value, datetime):
+        return "datetime"
+    if isinstance(value, date):
+        return "date"
+    if isinstance(value, time):
+        return "time"
+    if isinstance(value, UUID):
+        return "uuid"
+    if isinstance(value, PurePath):
+        return "path"
+    if isinstance(value, Enum):
+        return "enum"
     if isinstance(value, list):
         return "array"
     if isinstance(value, Mapping):

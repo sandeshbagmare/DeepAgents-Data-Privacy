@@ -40,10 +40,19 @@ blocks are not copied into the replacement result.
 - Record collections become column names, inferred types, and one synthetic row.
 - Structured objects become recursive shapes with synthetic scalar values.
 - JSON strings are parsed before structural sanitization.
+- Common Python models and containers are normalized before shape extraction.
+- Cycles and structures deeper than 32 levels become withheld reference markers.
 - Plain prose is withheld by default.
 - Identifier-like fields are marked withheld.
 - Data-like mapping keys are replaced with synthetic field names.
 - Counts and aggregates require explicit opt-in.
+
+Normalization intentionally recognizes explicit structural protocols: mappings,
+sequences, sets, dataclasses, Pydantic `model_dump()`, and named tuple `_asdict()`.
+It does not inspect arbitrary object attributes or `repr()` output because those paths
+can execute application code or disclose values. Unknown values are represented only
+by a type name and synthetic scalar; traversal failures return a generic withheld
+envelope.
 
 ## Transport evidence
 
