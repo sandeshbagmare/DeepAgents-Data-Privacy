@@ -23,6 +23,31 @@ The raw dataset is generated and analyzed in `server.py`. It exists only in the 
 server process. The tool response is constructed separately and contains no `rows`
 field or source identifiers.
 
+The MCP server uses stdio, not HTTP. The separate Deep Agent process later sends the
+user question and the approved aggregate-only tool result to the configured model over
+HTTPS. Therefore, the precise guarantee is that **raw rows do not reach the agent or
+LLM**; approved aggregates and metadata do reach the LLM so it can answer the question.
+
+## Transport evidence
+
+![Sanitized MCP evidence showing stdio transport and zero server TCP sockets](assets/privacy-evidence.png)
+
+Run the evidence capture directly:
+
+```powershell
+.venv\Scripts\python.exe scripts\capture-privacy-evidence.py
+```
+
+The script opens a real MCP JSON-RPC session over the child process's stdin/stdout,
+calls `get_products`, and inspects the MCP server PID with `Get-NetTCPConnection` on
+Windows. It verifies the observed transport topology; the recursive payload assertions
+in `smoke.py` separately enforce that the serialized response has no `rows` key and
+contains the explicit privacy metadata.
+
+The zero-socket observation is scoped to the MCP server process during that call. It
+does not claim that the Deep Agent makes no network request: the agent uses HTTPS to
+call the selected language-model provider after receiving the safe tool response.
+
 ## What the LLM receives
 
 Each of the 34 tools returns only:
@@ -98,6 +123,13 @@ OPENAI_BASE_URL=https://provider.example/v1
 
 Do not commit `.env`. If a key has been pasted into chat, logs, an issue, or source
 control, revoke it and create a new one before use.
+
+For the demonstrated OpenAI-compatible endpoint, configure it without putting the key
+on the command line:
+
+```powershell
+.\scripts\configure-provider.ps1 -BaseUrl "https://jianzhile.vip/v1"
+```
 
 ## Verification
 

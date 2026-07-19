@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MCP privacy evidence</title>
+  <style>
+    :root { color-scheme: dark; --ink: #f4f1e8; --muted: #a6b2ad; --green: #5ee6a8; --line: #35443e; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #101815; color: var(--ink); font-family: Consolas, "Courier New", monospace; }
+    main { width: min(1080px, calc(100vw - 48px)); border: 1px solid var(--line); background: #17221e; box-shadow: 0 24px 60px #0008; }
+    header { display: flex; justify-content: space-between; gap: 24px; padding: 18px 24px; border-bottom: 1px solid var(--line); background: #1d2b26; }
+    h1 { margin: 0; font-family: Georgia, serif; font-size: 24px; font-weight: 600; letter-spacing: 0; }
+    .status { color: var(--green); font-weight: 700; }
+    .body { display: grid; grid-template-columns: 260px 1fr; }
+    aside { padding: 24px; border-right: 1px solid var(--line); }
+    aside p { margin: 0 0 22px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    aside strong { display: block; margin-top: 4px; color: var(--ink); font-size: 18px; }
+    pre { margin: 0; padding: 24px 28px; overflow: hidden; color: #d8e5df; font-size: 14px; line-height: 1.48; }
+    .key { color: #8ed8ff; } .false { color: var(--green); } .number { color: #ffd479; }
+    footer { padding: 14px 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    @media (max-width: 760px) { .body { grid-template-columns: 1fr; } aside { border-right: 0; border-bottom: 1px solid var(--line); } }
+  </style>
+</head>
+<body>
+  <main>
+    <header><h1>Private MCP transport evidence</h1><span class="status">PASS</span></header>
+    <div class="body">
+      <aside>
+        <p>Transport<strong>stdio</strong></p>
+        <p>MCP server TCP sockets<strong>0</strong></p>
+        <p>Raw rows shared<strong>No</strong></p>
+        <p>Example source<strong>Synthetic</strong></p>
+      </aside>
+      <pre>{
+  <span class="key">"tool"</span>: "get_products",
+  <span class="key">"operation"</span>: "group_average",
+  <span class="key">"response_top_level_keys"</span>: [
+    "title", "privacy", "schema",
+    "example_row", "query", "result"
+  ],
+  <span class="key">"raw_rows_shared"</span>: <span class="false">false</span>,
+  <span class="key">"result"</span>: [
+    {"category": "Hardware", "average": <span class="number">2346.87</span>},
+    {"category": "Service", "average": <span class="number">2448.82</span>},
+    {"category": "Software", "average": <span class="number">2584.67</span>}
+  ]
+}</pre>
+    </div>
+    <footer>Captured from seed 7 with scripts/capture-privacy-evidence.py. No API key or model request is used.</footer>
+  </main>
+</body>
+</html>
