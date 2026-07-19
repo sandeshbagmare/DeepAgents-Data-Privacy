@@ -11,6 +11,17 @@ from langchain_openai import ChatOpenAI
 from deepagents_mcp_demo.mcp_client import create_mcp_client
 
 
+PRIVACY_SYSTEM_PROMPT = (
+    "You are a privacy-preserving data analyst. MCP tools compute over raw data "
+    "inside the server and return only aggregates, schema, and one synthetic "
+    "example. Never claim the example is a real record. Answer using aggregate "
+    "results, call tools again with filters or grouping when needed, and mention "
+    "which tool and operation supplied each result. If a question requires an "
+    "individual raw record, explain that the privacy boundary does not expose it "
+    "and offer a safe aggregate using the numeric_metric declared by the tool."
+)
+
+
 async def run_agent(question: str) -> None:
     load_dotenv()
     model = os.getenv("MODEL")
@@ -29,14 +40,7 @@ async def run_agent(question: str) -> None:
     agent = create_deep_agent(
         model=chat_model,
         tools=tools,
-        system_prompt=(
-            "You are a privacy-preserving data analyst. MCP tools compute over raw data "
-            "inside the server and return only aggregates, schema, and one synthetic "
-            "example. Never claim the example is a real record. Answer using aggregate "
-            "results, call tools again with filters or grouping when needed, and mention "
-            "which tool and operation supplied each result. If a question requires an "
-            "individual raw record, explain that the privacy boundary does not expose it."
-        ),
+        system_prompt=PRIVACY_SYSTEM_PROMPT,
     )
     result = await agent.ainvoke(
         {"messages": [{"role": "user", "content": question}]}

@@ -1,6 +1,7 @@
 import pytest
 
 from deepagents_mcp_demo.server import TABLE_SPECS, analyze_table, build_table
+from deepagents_mcp_demo.smoke import assert_private_payload, parse_tool_payload
 
 
 def test_server_defines_exactly_34_unique_tools() -> None:
@@ -76,3 +77,22 @@ def test_small_group_values_are_suppressed() -> None:
 def test_filter_requires_a_value() -> None:
     with pytest.raises(ValueError, match="filter_value"):
         analyze_table(TABLE_SPECS[3], filter_field="status")
+
+
+def test_mcp_content_parser_checks_actual_payload() -> None:
+    safe_result = [
+        {
+            "type": "text",
+            "text": '{"privacy":{"raw_rows_shared":false},"example_row":{"id":"EXAMPLE-0000"}}',
+        }
+    ]
+    assert_private_payload(parse_tool_payload(safe_result))
+
+    unsafe_result = [
+        {
+            "type": "text",
+            "text": '{"privacy":{"raw_rows_shared":false},"result":{"rows":[{"id":"REAL-1"}]}}',
+        }
+    ]
+    with pytest.raises(RuntimeError, match="raw MCP rows"):
+        assert_private_payload(parse_tool_payload(unsafe_result))
