@@ -1,25 +1,115 @@
-# Deep Agents: Private Analytics over MCP
+# Deep Agents MCP Privacy
 
-This project demonstrates how an AI agent can answer useful questions about tabular
-data without giving the language model the underlying rows. A local FastMCP process
-owns and analyzes the raw data. The Deep Agent receives only approved aggregates,
-schema metadata, query metadata, and one fixed synthetic example.
+`deepagents-mcp-privacy` is a fail-closed Python gateway for putting MCP tools behind
+a privacy boundary before connecting them to Deep Agents. It preserves tool names,
+descriptions, and input schemas, but constructs new responses containing only data
+shape, field names, and synthetic examples. Raw tool responses remain in the gateway
+process and do not enter the Deep Agent process.
+
+The default policy exposes no observed values, row counts, category labels, or
+aggregates. Tables, structured objects, infrastructure responses, and JSON encoded as
+text become safe structural descriptions. Unstructured text and unsupported content
+are withheld because arbitrary prose cannot be generically de-identified safely.
+
+## Install and plug in
+
+Python 3.11 or newer is required.
+
+```powershell
+python -m pip install deepagents-mcp-privacy
+```
+
+Wrap the same connection mapping you would give to `MultiServerMCPClient`:
+
+```python
+from deepagents import create_deep_agent
+from deepagents_mcp_privacy import create_private_mcp_client
+
+connections = {
+  "internal": {
+    "transport": "stdio",
+    "command": "python",
+    "args": ["-m", "your_mcp_server"],
+  }
+}
+
+client = create_private_mcp_client(connections)
+tools = await client.get_tools()
+agent = create_deep_agent(model=model, tools=tools)
+```
+
+The process topology is:
+
+```mermaid
+flowchart LR
+  A[Deep Agent] <-->|safe MCP response| G[Privacy gateway process]
+  G <-->|raw MCP response| U[Upstream MCP server]
+  G --> S[Schema and synthetic examples]
+  G -. blocks .-> R[Observed values and rows]
+```
+
+For in-process FastMCP composition, use `create_private_proxy(upstream, policy=...)`.
+Use `sanitize_value(value)` when integrating the policy engine into another boundary.
+
+## Disclosure policy
+
+| Input | Default response |
+| --- | --- |
+| Table or list of records | Column names, types, synthetic row |
+| Structured object | Nested field names, types, synthetic scalar examples |
+| Infrastructure/status JSON | Shape only; hostnames, IPs, metrics, and states replaced |
+| JSON string | Parsed and handled as structured data |
+| Plain text | Withheld |
+| Upstream error | Generic error; upstream message withheld |
+| Images, audio, resources, mixed blocks | Withheld |
+
+Mapping keys that resemble emails, IP addresses, UUIDs, URLs, long tokens, or
+free-form values are replaced with `SYNTHETIC_FIELD_n`. Stable field names are exposed
+because an LLM needs structure to call and interpret tools. If field names themselves
+are sensitive in your domain, do not expose that MCP server without a domain-specific
+schema allowlist.
+
+Counts and numeric aggregates are available only as explicit policy opt-ins:
+
+```python
+client = create_private_mcp_client(
+  connections,
+  minimum_cohort_size=5,
+  expose_counts=True,
+  expose_aggregates=True,
+)
+```
+
+Category values are replaced by synthetic group labels. Numeric and grouped results
+are suppressed below the cohort threshold. Aggregate mode still reveals information
+derived from real data and is not equivalent to the schema-only default.
+
+For custom plain-text handling, use an in-process `PrivacyPolicy.text_sanitizers`
+callback that returns a structured intermediate object. The normal sanitizer runs
+again on that object, so callback output values are still replaced before disclosure.
+
+## 34-tool demo
+
+The repository also includes a complete private analytics demonstration. Its local
+FastMCP server owns and analyzes generated rows and exposes exactly **34 deterministic,
+read-only table tools** over stdio. This server is already aggregate-safe; the demo
+Deep Agent additionally routes it through the generic gateway.
 
 The server exposes exactly **34 deterministic, read-only table tools** through MCP over
 stdio. Every tool supports counts, numeric aggregates, grouping, and exact-match
 filters while enforcing a minimum numeric cohort size of five.
 
 > [!IMPORTANT]
-> This is an **aggregate-only** design, not a claim that no information reaches the
-> model. Approved aggregates, schema metadata, and a synthetic example reach the LLM.
-> Raw rows, real names, and source identifiers do not.
+> The demo server is an **aggregate-only** design. The generic gateway defaults to the
+> stricter schema-only policy. In both modes, tool metadata and synthetic structure
+> reach the LLM; user questions also reach the selected model provider.
 
 ![Privacy evidence showing stdio transport, zero MCP server TCP sockets, and an aggregate-only response](docs/assets/privacy-evidence.png)
 
 The screenshot is generated from a real MCP tool call. Reproduce the underlying check
 with `python scripts/capture-privacy-evidence.py`; it requires no API key.
 
-## The Privacy Boundary
+## Demo privacy boundary
 
 ```mermaid
 flowchart LR
@@ -154,9 +244,7 @@ If a numeric filter matches fewer than five rows, the response is:
 `get_web_metrics`, `get_campaigns`, `get_leads`, `get_subscriptions`, `get_payments`,
 `get_restaurants`, `get_recipes`, `get_courses`, and `get_students`.
 
-## Setup
-
-Python 3.11 or newer is required.
+## Development setup
 
 ```powershell
 py -m venv .venv
@@ -236,12 +324,16 @@ also exercised 578 combinations across all tools, operations, groupings, and fil
 
 ## Limitations
 
-This is a privacy-preserving architecture demonstration, not a complete production
-privacy system. Counts remain visible, and repeated or overlapping aggregate queries
-can support inference attacks. A production deployment should add authentication,
-authorization, query auditing, rate limits, contribution bounds, query budgets,
-differential privacy where appropriate, provider retention controls, and an independent
-security review.
+This library controls tool **results**, not tool arguments, prompts, model retention,
+MCP server behavior, or gateway host security. Tool arguments chosen by the agent are
+visible to the upstream MCP server. Tool metadata and field names remain visible to
+the model. A compromised gateway process can observe upstream results in memory.
+
+Schema-only mode minimizes disclosure but does not prove formal anonymity. Aggregate
+mode can support inference through repeated or overlapping queries. Production systems
+should add authentication, authorization, schema allowlists, query auditing, rate
+limits, contribution bounds, privacy budgets or differential privacy, provider
+retention controls, and an independent security review.
 
 See [docs/privacy-architecture.md](docs/privacy-architecture.md) for the detailed threat
 model and implementation rationale. VS Code can launch the local server using

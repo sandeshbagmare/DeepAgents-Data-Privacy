@@ -1,32 +1,49 @@
-# Privacy-Preserving MCP Analytics
+# Privacy Gateway Architecture
 
 ## Goal
 
-The language model may reason about statistics derived from MCP-managed data, but it
-must not receive the underlying rows. This project enforces that rule at the MCP server
-boundary rather than relying only on a prompt.
+The reusable gateway prevents raw MCP tool results from entering the Deep Agent
+process. Its default contract exposes only tool metadata, field names, type shapes,
+and synthetic examples. The bundled analytics server is a separate demonstration that
+can explicitly permit cohort-protected aggregates.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
     U[User question] --> L[Deep Agent and LLM]
-    L -->|operation, grouping, filter| M[MCP tool]
-    M --> D[(Raw rows inside MCP process)]
-    D --> A[Local aggregate engine]
-    A --> P[Privacy policy]
-    P -->|schema, synthetic example, aggregates| L
-    P -. blocks .-> X[Raw rows and identifiers]
+    L -->|tool arguments| G[Privacy gateway process]
+    G -->|tool arguments| M[Upstream MCP server]
+    M -->|raw result| G
+    G --> P[Fail-closed policy]
+    P -->|schema and synthetic examples| L
+    P -. blocks .-> X[Observed values, rows, errors, binary content]
 ```
 
-The raw dataset is generated and analyzed in `server.py`. It exists only in the MCP
-server process. The tool response is constructed separately and contains no `rows`
-field or source identifiers.
+`create_private_mcp_client()` rewrites each upstream connection to launch the library's
+stdio gateway. FastMCP proxies the tool catalog and calls the upstream server from that
+child process. Middleware discards the upstream `ToolResult` and constructs a new safe
+result before LangChain or Deep Agents receive it.
 
-The MCP server uses stdio, not HTTP. The separate Deep Agent process later sends the
-user question and the approved aggregate-only tool result to the configured model over
-HTTPS. Therefore, the precise guarantee is that **raw rows do not reach the agent or
-LLM**; approved aggregates and metadata do reach the LLM so it can answer the question.
+For stdio upstreams, both hops use local child-process pipes. HTTP upstreams remain
+remote, but their responses terminate in the gateway process. The separate Deep Agent
+process later sends the user question and safe result to the configured model over
+HTTPS. Raw results necessarily exist in the upstream and gateway processes; they do
+not cross the gateway-to-agent MCP boundary.
+
+The middleware fails closed. Upstream errors and sanitizer exceptions become a generic
+error, plain text is withheld unless a named policy hook handles it, and non-text MCP
+blocks are not copied into the replacement result.
+
+## Default data handling
+
+- Record collections become column names, inferred types, and one synthetic row.
+- Structured objects become recursive shapes with synthetic scalar values.
+- JSON strings are parsed before structural sanitization.
+- Plain prose is withheld by default.
+- Identifier-like fields are marked withheld.
+- Data-like mapping keys are replaced with synthetic field names.
+- Counts and aggregates require explicit opt-in.
 
 ## Transport evidence
 

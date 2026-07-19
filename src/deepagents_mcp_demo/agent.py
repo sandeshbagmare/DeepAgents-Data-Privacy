@@ -8,7 +8,8 @@ from deepagents import create_deep_agent
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
-from deepagents_mcp_demo.mcp_client import create_mcp_client
+from deepagents_mcp_demo.mcp_client import server_config
+from deepagents_mcp_privacy import create_private_mcp_client
 
 
 PRIVACY_SYSTEM_PROMPT = (
@@ -36,7 +37,11 @@ async def run_agent(question: str) -> None:
         use_responses_api=False,
     )
 
-    tools = await create_mcp_client().get_tools()
+    tools = await create_private_mcp_client(
+        server_config(),
+        expose_counts=True,
+        expose_aggregates=True,
+    ).get_tools()
     agent = create_deep_agent(
         model=chat_model,
         tools=tools,
